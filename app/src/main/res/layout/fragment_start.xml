@@ -1,0 +1,36 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.magda.meetupbuffer.fragments.StartFragment">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Shall we go somewhere?"
+        android:id="@+id/textView2"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="102dp"
+        android:textColor="#ffffff"
+        android:shadowColor="@android:color/holo_blue_dark"
+        android:textSize="50dp"
+        android:textStyle="bold"
+        android:singleLine="false"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:gravity="center_vertical|center_horizontal" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="LET&apos;S GO!"
+        android:id="@+id/buttonGo"
+        android:layout_below="@+id/textView2"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="69dp"
+        android:textColor="@android:color/holo_blue_light"
+        android:background="#ffffff"
+        android:layout_gravity="center" />
+</FrameLayout>

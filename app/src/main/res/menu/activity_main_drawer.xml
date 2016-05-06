@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_friends"
+            android:icon="@drawable/com_facebook_profile_picture_blank_portrait"
+            android:title="Friends" />
+        <item
+            android:id="@+id/nav_preferences"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="Preferences" />
+    </group>
+    <group android:menuCategory="container">
+
+
+    </group>
+
+</menu>
