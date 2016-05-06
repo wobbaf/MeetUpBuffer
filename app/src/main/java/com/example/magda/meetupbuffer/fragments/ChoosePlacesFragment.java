@@ -9,11 +9,14 @@ import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckedTextView;
 import android.widget.ListView;
 
 import com.example.magda.meetupbuffer.R;
+import com.example.magda.meetupbuffer.adapters.PlacesAdapter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,7 +84,14 @@ public class ChoosePlacesFragment extends Fragment {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_choose_places, container, false);
         ListView listViewPlaces = (ListView) v.findViewById(R.id.listViewPlaces);
-        listViewPlaces.setAdapter(new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, places));
+        listViewPlaces.setAdapter(new PlacesAdapter(getActivity(), R.layout.places_list_item, places));
+        listViewPlaces.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                CheckedTextView checkedTextView = (CheckedTextView) view.findViewById(R.id.placesItem);
+                checkedTextView.toggle();
+            }
+        });
         Button buttonGo = (Button) v.findViewById(R.id.buttonFragmentDestination);
         buttonGo.setOnClickListener(new View.OnClickListener() {
             @Override

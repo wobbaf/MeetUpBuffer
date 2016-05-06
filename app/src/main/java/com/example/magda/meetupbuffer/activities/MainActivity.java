@@ -1,8 +1,12 @@
 package com.example.magda.meetupbuffer.activities;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -14,10 +18,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
+import jade.android.MicroRuntimeServiceBinder;
+import jade.android.RuntimeCallback;
 import com.example.magda.meetupbuffer.R;
 import com.example.magda.meetupbuffer.adapters.FriendListAdapter;
+import com.example.magda.meetupbuffer.agent.DummyAgent;
+import com.example.magda.meetupbuffer.async.DownloadImageTask;
 import com.example.magda.meetupbuffer.fragments.ChooseFriendsFragment;
 import com.example.magda.meetupbuffer.fragments.ChoosePlacesFragment;
 import com.example.magda.meetupbuffer.fragments.DestinationFoundFragment;
@@ -33,16 +45,26 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import jade.android.MicroRuntimeService;
+import jade.core.Profile;
+import jade.util.leap.Properties;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener ,
         ChooseFriendsFragment.OnFragmentInteractionListener,
         ChoosePlacesFragment.OnFragmentInteractionListener,
         DestinationFoundFragment.OnFragmentInteractionListener,
-        StartFragment.OnFragmentInteractionListener{
+        StartFragment.OnFragmentInteractionListener {
+    String nickname = "dummy";
+    String host = "192.168.0.11";
+    String port = "1099";
+    ServiceConnection serviceConnection = null;
+    MicroRuntimeServiceBinder microRuntimeService = null;
+    boolean bind = false;
     public static ArrayList<JSONObject> friendsListData = new ArrayList();
     JSONArray list = null;
     ListView firendsList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,8 +84,10 @@ public class MainActivity extends AppCompatActivity
                     public void onCompleted(GraphResponse response) {
                         try {
                             list = response.getJSONObject().getJSONArray("data");
-                            for (int i = 0; i < list.length(); i++)
-                            {friendsListData.add(list.getJSONObject(i));};
+                            for (int i = 0; i < list.length(); i++) {
+                                friendsListData.add(list.getJSONObject(i));
+                            }
+                            ;
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -74,6 +98,15 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        NavigationView view = (NavigationView) findViewById(R.id.nav_view);
+        View headerLayout =
+                view.inflateHeaderView(R.layout.nav_header_main);
+        ImageView image = (ImageView) (headerLayout.findViewById(R.id.imageView));
+        TextView name = (TextView) (headerLayout.findViewById(R.id.nameTextView));
+
+        com.facebook.Profile profile = com.facebook.Profile.getCurrentProfile();
+        new DownloadImageTask(image).execute("https://graph.facebook.com/" + profile.getId() + "/picture?type=large");
+        name.setText(profile.getFirstName());
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
@@ -116,8 +149,55 @@ public class MainActivity extends AppCompatActivity
             startActivity(i);
             finish();
         }
+        if (id == R.id.start_main_container) {
+            bindService();
+        }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void bindService() {
+        serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                microRuntimeService = (MicroRuntimeServiceBinder) service;
+
+                Properties pp = new Properties();
+                pp.setProperty(Profile.MAIN_HOST, host);
+                pp.setProperty(Profile.MAIN_PORT, port);
+                pp.setProperty(Profile.JVM, Profile.ANDROID);
+
+                microRuntimeService.startAgentContainer(pp, new RuntimeCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        // Split container startup successfull
+                        microRuntimeService.startAgent(nickname, DummyAgent.class.getName(), new Object[]{getApplicationContext()}, new RuntimeCallback<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                //Agent succesfully started
+                            }
+
+                            @Override
+                            public void onFailure(Throwable throwable) {
+                                //Agent startup error
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        // Split container startup error
+                    }
+                });
+                ;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                microRuntimeService = null;
+            }
+        };
+        bindService(new Intent(getApplicationContext(), MicroRuntimeService.class), serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -128,7 +208,7 @@ public class MainActivity extends AppCompatActivity
 
         if (id == R.id.nav_friends) {
             // Handle the camera action
-        }  else if (id == R.id.nav_preferences) {
+        } else if (id == R.id.nav_preferences) {
 
         }
 
@@ -141,4 +221,5 @@ public class MainActivity extends AppCompatActivity
     public void onFragmentInteraction(Uri uri) {
 
     }
+
 }
