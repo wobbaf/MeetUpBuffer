@@ -42,7 +42,8 @@ public class DestinationFoundFragment extends Fragment implements
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     private GoogleMap map;
-
+    double latitude=0;
+    double longitude=0;
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
@@ -97,11 +98,15 @@ public class DestinationFoundFragment extends Fragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        String location = this.getArguments().getString("message");
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_destination_found, container, false);
-
+        String[] latlong =  location.split("\\s+");
+        double latitude = Float.parseFloat(latlong[0]);
+        double longitude = Float.parseFloat(latlong[1]);
         map = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMap();
-
+        Marker gpsLocation = map.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)));
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 15));
         // Move the camera instantly to hamburg with a zoom of 15.
 
         // Zoom in, animating the camera.
@@ -165,8 +170,8 @@ public class DestinationFoundFragment extends Fragment implements
         }
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (mLastLocation != null) {
-            Marker gpsLocation = map.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude())));
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), 15));
+            //Marker gpsLocation = map.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude())));
+            //map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), 15));
         } else {
             //Toast.makeText(this, "No location detected", Toast.LENGTH_LONG).show();
         }

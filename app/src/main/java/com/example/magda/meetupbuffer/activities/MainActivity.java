@@ -19,7 +19,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -27,8 +26,8 @@ import android.widget.TextView;
 import jade.android.MicroRuntimeServiceBinder;
 import jade.android.RuntimeCallback;
 import com.example.magda.meetupbuffer.R;
-import com.example.magda.meetupbuffer.adapters.FriendListAdapter;
-import com.example.magda.meetupbuffer.agent.DummyAgent;
+import com.example.magda.meetupbuffer.agent.AgentInterface;
+import com.example.magda.meetupbuffer.agent.AndroidAgent;
 import com.example.magda.meetupbuffer.async.DownloadImageTask;
 import com.example.magda.meetupbuffer.fragments.ChooseFriendsFragment;
 import com.example.magda.meetupbuffer.fragments.ChoosePlacesFragment;
@@ -56,15 +55,15 @@ public class MainActivity extends AppCompatActivity
         DestinationFoundFragment.OnFragmentInteractionListener,
         StartFragment.OnFragmentInteractionListener {
     String nickname = "dummy";
-    String host = "192.168.0.11";
+    String host = "192.168.0.10";
     String port = "1099";
     ServiceConnection serviceConnection = null;
-    MicroRuntimeServiceBinder microRuntimeService = null;
+    public static MicroRuntimeServiceBinder microRuntimeService = null;
     boolean bind = false;
     public static ArrayList<JSONObject> friendsListData = new ArrayList();
     JSONArray list = null;
     ListView firendsList;
-
+    public static AgentInterface agentInterface;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,7 +95,6 @@ public class MainActivity extends AppCompatActivity
         ).executeAsync();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         NavigationView view = (NavigationView) findViewById(R.id.nav_view);
         View headerLayout =
@@ -171,10 +169,11 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onSuccess(Void aVoid) {
                         // Split container startup successfull
-                        microRuntimeService.startAgent(nickname, DummyAgent.class.getName(), new Object[]{getApplicationContext()}, new RuntimeCallback<Void>() {
+                        microRuntimeService.startAgent(nickname, AndroidAgent.class.getName(), new Object[]{getApplicationContext()}, new RuntimeCallback<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
                                 //Agent succesfully started
+
                             }
 
                             @Override
