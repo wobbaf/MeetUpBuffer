@@ -44,7 +44,8 @@ public class ChooseFriendsFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     FriendListAdapter adapter;
-     ListView firendsList;
+    ListView firendsList;
+    ArrayList<String> friendsID = new ArrayList<String>();
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
@@ -108,12 +109,15 @@ public class ChooseFriendsFragment extends Fragment {
                 for (int i = 0; i < firendsList.getAdapter().getCount(); i++) {
                     if (checked.get(i)) {
                         try {
-                            System.out.println(MainActivity.friendsListData.get(i).getString("name"));
+                            //System.out.println(MainActivity.friendsListData.get(i).getString("id"));
+                            friendsID.add(MainActivity.friendsListData.get(i).getString("id"));
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
                     }
                 }
+                Bundle args = new Bundle();
+                ((MainActivity)getActivity()).setMyStringList(friendsID);
                 Fragment fragment = new ChoosePlacesFragment();
                 FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();

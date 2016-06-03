@@ -2,6 +2,7 @@ package com.example.magda.meetupbuffer.parsers;
 
 import java.io.File;
 import java.io.StringReader;
+import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -25,6 +26,7 @@ public class XMLRead {
     public static String time;
     public static String type;
     public static String result;
+    public static ArrayList<String> friends = new ArrayList<String>();
     public static String xmlString = "<?xml version=\"1.0\" encoding=\"utf-8\"?><a><b></b><c></c></a>";
     public XMLRead(){
         instance = this;
@@ -36,7 +38,24 @@ public class XMLRead {
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document document = builder.parse(new InputSource(new StringReader(xml)));
             Element rootElement = document.getDocumentElement();
-            //rootElement.getAttribute(id);
+            NodeList nodeList = document.getElementsByTagName("friends")
+                    .item(0).getChildNodes();
+            // get the immediate child (1st generation)
+            for (int i = 0; i < nodeList.getLength(); i++)
+                switch (nodeList.item(i).getNodeType()) {
+                    case Node.ELEMENT_NODE:
+                        //System.out.println(nodeList.getLength());
+                        Element element = (Element) nodeList.item(i);
+                        //System.out.println("element name: " + element.getNodeName());
+                        // check the element name
+                        if (element.getNodeName().equalsIgnoreCase("friend"))
+                        {
+
+                            //System.out.println("element name:" + element.getNodeName() + " id: " + element.getAttribute("id"));
+                            friends.add(element.getAttribute("id"));
+                        }
+                        break;
+                }
             type = getString("type",rootElement);
             id = getString("id",rootElement);
             switch(type){

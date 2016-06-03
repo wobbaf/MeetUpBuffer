@@ -16,12 +16,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckedTextView;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.example.magda.meetupbuffer.R;
+import com.example.magda.meetupbuffer.activities.MainActivity;
 import com.example.magda.meetupbuffer.adapters.PlacesAdapter;
 import com.example.magda.meetupbuffer.agent.AgentInterface;
 import com.example.magda.meetupbuffer.parsers.XMLParse;
@@ -31,6 +33,7 @@ import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import jade.core.MicroRuntime;
 import jade.wrapper.ControllerException;
@@ -50,13 +53,22 @@ public class ChoosePlacesFragment extends Fragment implements
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-    ArrayList<String> places = new ArrayList<String>(
+    List<String> places = new ArrayList<String>(
             Arrays.asList("amusement_park", "art_gallery", "bar", "beauty_salon",
                     "bowling_alley", "cafe", "casino", "city_hall", "clothing_store",
                     "food", "grocery_or_supermarket", "gym",
                     "library", "movie_theater", "museum", "night_club",
                     "park", "restaurant", "shopping_mall", "spa",
                     "zoo"));
+    List<String> drink_a_beer =  new ArrayList<String>(Arrays.asList("bar"));
+    List<String> have_fun =  new ArrayList<String>(Arrays.asList("zoo","night_club","amusement_park", "bowling_alley","casino"));
+    List<String> do_some_shopping =  new ArrayList<String>(Arrays.asList("grocery_or_supermarket", "shopping_mall", "clothing_store" ,"city_hall", "movie_theater"));
+    List<String> relax =  new ArrayList<String>(Arrays.asList("library","art_gallery","spa", "beauty_salon","park", "museum" ));
+    List<String> grab_a_lunch =  new ArrayList<String>(Arrays.asList("restaurant","food", "beauty_salon","cafe" ));
+    List<String> workout =  new ArrayList<String>(Arrays.asList("gym"));
+    List<String> placess = new ArrayList<String>(
+            Arrays.asList("drink a beer", "have fun", "do some shopping", "workout", "relax",
+                    "grab_a_lunch"));
     protected Location mLastLocation;
     protected GoogleApiClient mGoogleApiClient;
 
@@ -65,7 +77,7 @@ public class ChoosePlacesFragment extends Fragment implements
     private String mParam2;
     private AgentInterface agentInterface;
     private OnFragmentInteractionListener mListener;
-
+    public static ArrayList<String> friendsID;
     public ChoosePlacesFragment() {
         // Required empty public constructor
     }
@@ -104,7 +116,7 @@ public class ChoosePlacesFragment extends Fragment implements
         }
         buildGoogleApiClient();
         try {
-			agentInterface = MicroRuntime.getAgent("dummy")
+			agentInterface = MicroRuntime.getAgent(MainActivity.getNickname())
 					.getO2AInterface(AgentInterface.class);
 	} catch (StaleProxyException e) {
 			//showAlertDialog(getString(R.string.msg_interface_exc), true);
@@ -119,21 +131,30 @@ public class ChoosePlacesFragment extends Fragment implements
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_choose_places, container, false);
         ListView listViewPlaces = (ListView) v.findViewById(R.id.listViewPlaces);
-        listViewPlaces.setAdapter(new PlacesAdapter(getActivity(), R.layout.places_list_item, places));
+        //listViewPlaces.setAdapter(new PlacesAdapter(getActivity(), R.layout.places_list_item, places));
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+                getActivity(),
+                android.R.layout.simple_list_item_1,
+                placess );
+        listViewPlaces.setAdapter(arrayAdapter);
+        listViewPlaces.setChoiceMode(listViewPlaces.CHOICE_MODE_MULTIPLE);
         listViewPlaces.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                CheckedTextView checkedTextView = (CheckedTextView) view.findViewById(R.id.placesItem);
-                checkedTextView.toggle();
+                //CheckedTextView checkedTextView = (CheckedTextView) view.findViewById(R.id.placesItem);
+                //checkedTextView.toggle();
+                //Toast.makeText(getActivity().getApplicationContext(), checkedTextView.getText().toString(), Toast.LENGTH_SHORT).show();
             }
         });
+        listViewPlaces.setChoiceMode(listViewPlaces.CHOICE_MODE_MULTIPLE);
         Button buttonGo = (Button) v.findViewById(R.id.buttonFragmentDestination);
         buttonGo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 getLocation();
+                friendsID=((MainActivity)getActivity()).getFriendsID();
                 String localization = mLastLocation.getLatitude() + " " + mLastLocation.getLongitude();
-                String content = setContent("0", "dummy", localization, null, null);
+                String content = setContent("0", MainActivity.getNickname(), localization, null, null, friendsID);
                 agentInterface.sendMessage(content);
                 String loc = agentInterface.getDestination();
                 Bundle bundle = new Bundle();
@@ -251,7 +272,7 @@ public class ChoosePlacesFragment extends Fragment implements
             Toast.makeText(getActivity(), "No location detected", Toast.LENGTH_LONG).show();
         }
     }
-    private String setContent(String type, String id, String location, String state, String time){
+    private String setContent(String type, String id, String location, String state, String time, ArrayList friends){
         String content = null;
         XMLParse p = new XMLParse();
         if (type != null)
@@ -264,6 +285,8 @@ public class ChoosePlacesFragment extends Fragment implements
             p.instance().state = state;
         if (time != null)
             p.instance().time = time;
+        if (friends !=null)
+            p.instance().friends = friends;
         content = p.Parse();
         Log.d("Parse", content);
         return content;

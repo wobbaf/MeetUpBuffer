@@ -61,7 +61,8 @@ public class FriendListAdapter extends ArrayAdapter {
             conn1.setInstanceFollowRedirects(true);
             Bitmap fb_img = BitmapFactory.decodeStream(conn1.getInputStream());*/
             holder.txtTitle.setText(friend.getString("name"));
-            new DownloadImageTask(holder.imgIcon).execute("https://graph.facebook.com/" + friend.getString("id") + "/picture?type=large");
+            //holder.imgIcon.setImageResource(R.drawable.com_facebook_profile_picture_blank_square);
+            new DownloadImageTask(holder.imgIcon).execute("https://graph.facebook.com/" + friend.getString("id") + "/picture?type=small");
         } catch (JSONException e) {
             e.printStackTrace();
         }

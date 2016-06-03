@@ -1,8 +1,17 @@
 package com.example.magda.meetupbuffer.agent;
 
+import android.annotation.TargetApi;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 
+import com.example.magda.meetupbuffer.R;
+import com.example.magda.meetupbuffer.activities.MainActivity;
 import com.example.magda.meetupbuffer.parsers.XMLParse;
 import com.example.magda.meetupbuffer.parsers.XMLRead;
 
@@ -22,7 +31,7 @@ import jade.lang.acl.MessageTemplate;
  * Created by magda on 06.05.16.
  */
 public class AndroidAgent extends Agent  implements AgentInterface{
-    ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
+    ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
     String agentID = "Server";
     AID receiver = new AID(agentID,AID.ISLOCALNAME);
     AMSAgentDescription [] agents = null;
@@ -42,6 +51,44 @@ public class AndroidAgent extends Agent  implements AgentInterface{
         cm.registerOntology(FIPAManagementOntology.getInstance());
         cm.setValidationMode(false);
         registerO2AInterface(AgentInterface.class, this);
+        addBehaviour(new CyclicBehaviour() {
+            @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+            @Override
+            public void action() {
+                {
+                    MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+                    ACLMessage rec = receive(mt);
+                    if (rec != null) {
+                        //System.out.println(this.getAgent().getName() + " recieved from " + rec.getSender().getName());
+                        XMLRead read = new XMLRead();
+                        read.Read(rec.getContent());
+                        location = read.location;
+                        Log.d("Destination", read.location);
+                        NotificationManager notificationManager = (NotificationManager)
+                                context.getSystemService(Context.NOTIFICATION_SERVICE);
+                        Intent intent = new Intent(context, MainActivity.class);
+                        intent.setAction(Intent.ACTION_MAIN);
+                        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        intent.putExtra("origin", location);
+                        Bundle bundle = new Bundle();
+                        bundle.putString("origin", location);
+                        intent.putExtras(bundle);
+                        PendingIntent pIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                        Notification notification = new Notification.Builder(context)
+                                .setContentText("You have been ivited by " + read.id)
+                                .setSmallIcon(R.drawable.com_facebook_profile_picture_blank_square)
+                                .setContentIntent(pIntent).setAutoCancel(true)
+                                .build();
+
+                        notificationManager.notify(1, notification);
+
+                    } else
+                        block();
+                }
+            }
+        });
     }
 
     public void sendMessage(String s) {
@@ -103,8 +150,11 @@ public class AndroidAgent extends Agent  implements AgentInterface{
                         //System.out.println(this.getAgent().getName() + " recieved from " + rec.getSender().getName());
                         XMLRead read = new XMLRead();
                         read.Read(rec.getContent());
+                        try{
                         location = read.location;
-                        Log.d("Destination", read.location);
+                        Log.d("Destination", read.location);}
+                        catch(Exception e)
+                        {}
                     }
                 }
             };

@@ -22,6 +22,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import jade.android.MicroRuntimeServiceBinder;
 import jade.android.RuntimeCallback;
@@ -32,6 +33,7 @@ import com.example.magda.meetupbuffer.async.DownloadImageTask;
 import com.example.magda.meetupbuffer.fragments.ChooseFriendsFragment;
 import com.example.magda.meetupbuffer.fragments.ChoosePlacesFragment;
 import com.example.magda.meetupbuffer.fragments.DestinationFoundFragment;
+import com.example.magda.meetupbuffer.fragments.ProposeDestinationFragment;
 import com.example.magda.meetupbuffer.fragments.StartFragment;
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
@@ -44,6 +46,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+
 import jade.android.MicroRuntimeService;
 import jade.core.Profile;
 import jade.util.leap.Properties;
@@ -53,9 +57,14 @@ public class MainActivity extends AppCompatActivity
         ChooseFriendsFragment.OnFragmentInteractionListener,
         ChoosePlacesFragment.OnFragmentInteractionListener,
         DestinationFoundFragment.OnFragmentInteractionListener,
-        StartFragment.OnFragmentInteractionListener {
-    String nickname = "dummy";
-    String host = "192.168.0.10";
+        StartFragment.OnFragmentInteractionListener,
+        ProposeDestinationFragment.OnFragmentInteractionListener{
+    public static String getNickname() {
+        return nickname;
+    }
+
+    static String nickname = "";
+    String host = "192.168.111.95";
     String port = "1099";
     ServiceConnection serviceConnection = null;
     public static MicroRuntimeServiceBinder microRuntimeService = null;
@@ -64,16 +73,44 @@ public class MainActivity extends AppCompatActivity
     JSONArray list = null;
     ListView firendsList;
     public static AgentInterface agentInterface;
+
+    public static ArrayList<String> getFriendsID() {
+        return friendsID;
+    }
+
+    public static ArrayList<String> friendsID;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Fragment fragment = new StartFragment();
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.content_frame, fragment);
-        fragmentTransaction.addToBackStack(null);
-        fragmentTransaction.commit();
+        Intent intent = getIntent();
+        Bundle extras = intent.getExtras();
+        if(extras==null) {
+            Fragment fragment = new StartFragment();
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.content_frame, fragment);
+            fragmentTransaction.addToBackStack(null);
+            fragmentTransaction.commit();
+        }
+        else{
+            if(extras!=null) {
+                String msg = extras.getString("origin");
+                Bundle bundle = new Bundle();
+                String myMessage = msg;
+                Toast.makeText(this, msg,
+                        Toast.LENGTH_LONG).show();
+                bundle.putString("message", myMessage);
+                Fragment fragment = new ProposeDestinationFragment();
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.replace(R.id.content_frame, fragment);
+                fragmentTransaction.addToBackStack(null);
+                fragmentTransaction.commit();
+            }
+        }
+
         new GraphRequest(
                 AccessToken.getCurrentAccessToken(),
                 "/me/friends",
@@ -82,11 +119,12 @@ public class MainActivity extends AppCompatActivity
                 new GraphRequest.Callback() {
                     public void onCompleted(GraphResponse response) {
                         try {
-                            list = response.getJSONObject().getJSONArray("data");
-                            for (int i = 0; i < list.length(); i++) {
-                                friendsListData.add(list.getJSONObject(i));
+                            if(response!=null) {
+                                list = response.getJSONObject().getJSONArray("data");
+                                for (int i = 0; i < list.length(); i++) {
+                                    friendsListData.add(list.getJSONObject(i));
+                                }
                             }
-                            ;
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -103,8 +141,11 @@ public class MainActivity extends AppCompatActivity
         TextView name = (TextView) (headerLayout.findViewById(R.id.nameTextView));
 
         com.facebook.Profile profile = com.facebook.Profile.getCurrentProfile();
-        new DownloadImageTask(image).execute("https://graph.facebook.com/" + profile.getId() + "/picture?type=large");
-        name.setText(profile.getFirstName());
+        if(profile!=null) {
+            new DownloadImageTask(image).execute("https://graph.facebook.com/" + profile.getId() + "/picture?type=large");
+            name.setText(profile.getFirstName());
+            nickname = profile.getId().toString();
+        }
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
@@ -120,8 +161,14 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
+            friendsListData.clear();
             super.onBackPressed();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     @Override
@@ -130,6 +177,12 @@ public class MainActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.main, menu);
 
         return true;
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
     }
 
     @Override
@@ -154,6 +207,37 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //bindService();
+        Intent intent = getIntent();
+        Bundle extras = intent.getExtras();
+        if(extras!=null) {
+            Fragment fragment = new StartFragment();
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.content_frame, fragment);
+            fragmentTransaction.addToBackStack(null);
+            fragmentTransaction.commit();
+            String msg = extras.getString("origin");
+            Bundle bundle = new Bundle();
+            bundle.putString("message", msg);
+            fragment = new ProposeDestinationFragment();
+            fragment.setArguments(bundle);
+            fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.content_frame, fragment);
+            fragmentTransaction.addToBackStack(null);
+            fragmentTransaction.commit();
+        }
+    }
+
     private void bindService() {
         serviceConnection = new ServiceConnection() {
             @Override
@@ -169,16 +253,18 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onSuccess(Void aVoid) {
                         // Split container startup successfull
+                        Toast.makeText(MainActivity.this, "Container created", Toast.LENGTH_LONG).show();
                         microRuntimeService.startAgent(nickname, AndroidAgent.class.getName(), new Object[]{getApplicationContext()}, new RuntimeCallback<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
                                 //Agent succesfully started
-
+                                Toast.makeText(MainActivity.this, "Agent created", Toast.LENGTH_LONG).show();
                             }
 
                             @Override
                             public void onFailure(Throwable throwable) {
                                 //Agent startup error
+                                Toast.makeText(MainActivity.this, "Agent creation error", Toast.LENGTH_LONG).show();
                             }
                         });
                     }
@@ -186,6 +272,7 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onFailure(Throwable throwable) {
                         // Split container startup error
+                        Toast.makeText(MainActivity.this, "Container failure", Toast.LENGTH_LONG).show();
                     }
                 });
                 ;
@@ -197,6 +284,7 @@ public class MainActivity extends AppCompatActivity
             }
         };
         bindService(new Intent(getApplicationContext(), MicroRuntimeService.class), serviceConnection, Context.BIND_AUTO_CREATE);
+
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -221,4 +309,10 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    public void setMyStringList(ArrayList<String> myStringList) {
+        this.friendsID = myStringList;
+        for (String person : friendsID){
+            System.out.println(person);
+        }
+    }
 }
