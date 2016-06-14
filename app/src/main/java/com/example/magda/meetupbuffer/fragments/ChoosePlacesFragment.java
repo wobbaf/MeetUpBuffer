@@ -54,7 +54,9 @@ public class ChoosePlacesFragment extends Fragment implements
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+    int chosenTypePlaceIdx =0;
     List<String> EngToDisplayPlaces = Arrays.asList("Pub", "Restaurant", "Theater", "Club","Swimming pool","Theater","Bowling Club","Kebab");
+    List<String> PlToServerPlaces = Arrays.asList("pub","restauracja","teatr","klub","pływalnia","tratr","kręgielnia","kebab");
     String place = "Pub" ;
     protected Location mLastLocation;
     protected GoogleApiClient mGoogleApiClient;
@@ -128,6 +130,7 @@ public class ChoosePlacesFragment extends Fragment implements
         listViewPlaces.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                chosenTypePlaceIdx = position;
                 //CheckedTextView checkedTextView = (CheckedTextView) view.findViewById(R.id.placesItem);
                 //checkedTextView.toggle();
                 //Toast.makeText(getActivity().getApplicationContext(), checkedTextView.getText().toString(), Toast.LENGTH_SHORT).show();
@@ -160,11 +163,12 @@ public class ChoosePlacesFragment extends Fragment implements
                     Toast.makeText(getActivity(),resultDate
                             ,Toast.LENGTH_LONG).show();
                     getLocation();
+
                     friendsID=((MainActivity)getActivity()).getFriendsID();
                     //LastLocation
                     String localization = mLastLocation.getLatitude() + " " + mLastLocation.getLongitude();
                     //String type, String id, String location, String state, String time, String placeId, String placeType, ArrayList<String> friends, ArrayList<String> favPlaces)
-                    String content = setContent("0", MainActivity.getNickname(), localization, "accepting", resultDate, null, place, friendsID, null);
+                    String content = setContent("0", MainActivity.getNickname(), localization, "accepting", resultDate, null, PlToServerPlaces.get(chosenTypePlaceIdx), friendsID, null);
                     try {
                         agentInterface = MicroRuntime.getAgent(MainActivity.getNickname())
                                 .getO2AInterface(AgentInterface.class);

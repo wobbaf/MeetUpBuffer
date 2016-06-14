@@ -7,6 +7,10 @@
             android:icon="@drawable/com_facebook_profile_picture_blank_portrait"
             android:title="Friends" />
         <item
+            android:id="@+id/nav_favourite_places"
+            android:title="Favourite places" />
+
+        <item
             android:id="@+id/nav_preferences"
             android:icon="@drawable/ic_menu_manage"
             android:title="Preferences" />
