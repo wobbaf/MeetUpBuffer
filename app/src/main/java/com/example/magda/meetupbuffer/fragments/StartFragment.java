@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.example.magda.meetupbuffer.R;
+import com.example.magda.meetupbuffer.activities.MainActivity;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -73,6 +74,8 @@ public class StartFragment extends Fragment {
         buttonGo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                MainActivity activity = (MainActivity) getActivity();
+                activity.bindService();
                 Fragment fragment = new ChooseFriendsFragment();
                 FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();

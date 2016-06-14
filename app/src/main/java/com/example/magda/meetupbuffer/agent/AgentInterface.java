@@ -6,7 +6,6 @@ import android.util.Pair;
  * Created by magda on 17.05.16.
  */
 public interface AgentInterface {
-    public void sendMessage(String s);
+    public void sendMessage(String s, int acceptProposal);
     public String[] getAllActive();
-    public String getDestination();
 }

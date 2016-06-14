@@ -1,5 +1,4 @@
 package com.example.magda.meetupbuffer.parsers;
-
 import java.io.File;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -19,59 +18,130 @@ import org.w3c.dom.Element;
 
 public class XMLRead {
     private XMLRead instance;
-    public static String[] list;
-    public static String id;
-    public static String state;
-    public static String location;
-    public static String time;
-    public static String type;
-    public static String result;
+    public String[] list;
+    public String id;
+    public String state;
+    public String location;
+    public String time;
+    public String type;
+    //public String[] friends = new String[5];
     public static ArrayList<String> friends = new ArrayList<String>();
-    public static String xmlString = "<?xml version=\"1.0\" encoding=\"utf-8\"?><a><b></b><c></c></a>";
+    public static ArrayList<String> favPlaces = new ArrayList<String>();
+    public String placeType;
+    public String placeId;
+    public String getLocation() {
+        return location;
+    }
+    public void setLocation(String location) {
+        this.location = location;
+    }
+    public String getId() {
+        return id;
+    }
+    public void setId(String id) {
+        this.id = id;
+    }
+    public String getState() {
+        return state;
+    }
+    public void setState(String state) {
+        this.state = state;
+    }
+    public String getTime() {
+        return time;
+    }
+    public void setTime(String time) {
+        this.time = time;
+    }
+    public String getType() {
+        return type;
+    }
+    public void setType(String type) {
+        this.type = type;
+    }
+    public String getplaceType() {
+        return placeType;
+    }
+    public void setplaceType(String placeId) {
+        this.placeType = placeType;
+    }
+    public String getplaceId() {
+        return placeId;
+    }
+    public void setplaceId(String placeId) {
+        this.placeId = placeId;
+    }
+    public ArrayList getFriends() {
+        return friends;
+    }
+    public void setFriends(ArrayList friends) {
+        this.friends = friends;
+    }
+    public ArrayList getfavPlaces() {
+        return favPlaces;
+    }
+    public void setfavPlaces(ArrayList favPlaces) {
+        this.favPlaces = favPlaces;
+    }
     public XMLRead(){
         instance = this;
     }
-    public static void Read(String xml){
-        try
+    public void Read(String xml){
+        if(xml!=null)
         {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(new InputSource(new StringReader(xml)));
-            Element rootElement = document.getDocumentElement();
-            NodeList nodeList = document.getElementsByTagName("friends")
-                    .item(0).getChildNodes();
-            // get the immediate child (1st generation)
-            for (int i = 0; i < nodeList.getLength(); i++)
-                switch (nodeList.item(i).getNodeType()) {
-                    case Node.ELEMENT_NODE:
-                        //System.out.println(nodeList.getLength());
-                        Element element = (Element) nodeList.item(i);
-                        //System.out.println("element name: " + element.getNodeName());
-                        // check the element name
-                        if (element.getNodeName().equalsIgnoreCase("friend"))
-                        {
+            try
+            {
+                System.out.println("Read: " + xml);
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                InputSource in = new InputSource(new StringReader(xml));
+                Document document = builder.parse(in);
+                Element rootElement = document.getDocumentElement();
+                friends = new ArrayList<String>();
+                NodeList nodeList = document.getElementsByTagName("friends")
+                        .item(0).getChildNodes();
+                for (int i = 0; i < nodeList.getLength(); i++)
+                    switch (nodeList.item(i).getNodeType()) {
+                        case Node.ELEMENT_NODE:
+                            Element element = (Element) nodeList.item(i);
+                            if (element.getNodeName().equalsIgnoreCase("friend"))
+                            {
+                                friends.add(element.getAttribute("id"));
+                            }
+                            break;
+                    }
+                nodeList = document.getElementsByTagName("favPlaces")
+                        .item(0).getChildNodes();
+                for (int i = 0; i < nodeList.getLength(); i++)
+                    switch (nodeList.item(i).getNodeType()) {
+                        case Node.ELEMENT_NODE:
+                            Element element = (Element) nodeList.item(i);
+                            if (element.getNodeName().equalsIgnoreCase("favPlaces"))
+                            {
+                                favPlaces.add(element.getAttribute("placeId"));
+                            }
+                            break;
+                    }
+                type = getString("type",rootElement);
+                id = getString("id",rootElement);
 
-                            //System.out.println("element name:" + element.getNodeName() + " id: " + element.getAttribute("id"));
-                            friends.add(element.getAttribute("id"));
-                        }
+                switch(type){
+                    case "0":
+                        location = getString("location",rootElement);
+                        placeType = getString("placeType",rootElement);
+                        break;
+                    case "1":
+                        state = getString("state",rootElement);
+                        location = getString("location",rootElement);
+                        break;
+                    case "2":
+                        location = getString("location",rootElement);
+                        time = getString("time",rootElement);
                         break;
                 }
-            type = getString("type",rootElement);
-            id = getString("id",rootElement);
-            switch(type){
-                case "0":
-                    location = getString("location",rootElement);
-                    break;
-                case "1":
-                    state = getString("state",rootElement);
-                    break;
-                case "2":
-                    location = getString("location",rootElement);
-                    time = getString("time",rootElement);
-                    break;
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
     protected static String getString(String tagName, Element element) {

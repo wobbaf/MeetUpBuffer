@@ -1,26 +1,19 @@
 package com.example.magda.meetupbuffer.fragments;
 
 import android.Manifest;
-import android.app.Activity;
-import android.support.v4.app.DialogFragment;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.magda.meetupbuffer.R;
@@ -32,8 +25,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import jade.core.MicroRuntime;
 import jade.lang.acl.ACLMessage;
@@ -43,29 +34,27 @@ import jade.wrapper.StaleProxyException;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link ChoosePlacesFragment.OnFragmentInteractionListener} interface
+ * {@link ProposeMeetingFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link ChoosePlacesFragment#newInstance} factory method to
+ * Use the {@link ProposeMeetingFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ChoosePlacesFragment extends Fragment implements
+public class ProposeMeetingFragment extends Fragment implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-    List<String> EngToDisplayPlaces = Arrays.asList("Pub", "Restaurant", "Theater", "Club","Swimming pool","Theater","Bowling Club","Kebab");
-    String place = "Pub" ;
-    protected Location mLastLocation;
-    protected GoogleApiClient mGoogleApiClient;
-    final int DATEPICKER_FRAGMENT = 1;
+
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
     private AgentInterface agentInterface;
     private OnFragmentInteractionListener mListener;
-    public static ArrayList<String> friendsID;
-    public ChoosePlacesFragment() {
+    protected Location mLastLocation;
+    protected GoogleApiClient mGoogleApiClient;
+
+    public ProposeMeetingFragment() {
         // Required empty public constructor
     }
 
@@ -75,11 +64,11 @@ public class ChoosePlacesFragment extends Fragment implements
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment ChoosePlacesFragment.
+     * @return A new instance of fragment ProposeMeetingFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static ChoosePlacesFragment newInstance(String param1, String param2) {
-        ChoosePlacesFragment fragment = new ChoosePlacesFragment();
+    public static ProposeMeetingFragment newInstance(String param1, String param2) {
+        ProposeMeetingFragment fragment = new ProposeMeetingFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -93,7 +82,6 @@ public class ChoosePlacesFragment extends Fragment implements
                 .addApi(LocationServices.API)
                 .build();
     }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,96 +91,53 @@ public class ChoosePlacesFragment extends Fragment implements
         }
         buildGoogleApiClient();
         try {
-			agentInterface = MicroRuntime.getAgent(MainActivity.getNickname())
-					.getO2AInterface(AgentInterface.class);
-	} catch (StaleProxyException e) {
-			//showAlertDialog(getString(R.string.msg_interface_exc), true);
-		} catch (ControllerException e) {
-			//showAlertDialog(getString(R.string.msg_controller_exc), true);
-		}
+            agentInterface = MicroRuntime.getAgent(MainActivity.getNickname())
+                    .getO2AInterface(AgentInterface.class);
+        } catch (StaleProxyException e) {
+            //showAlertDialog(getString(R.string.msg_interface_exc), true);
+        } catch (ControllerException e) {
+            //showAlertDialog(getString(R.string.msg_controller_exc), true);
+        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_choose_places, container, false);
-        ListView listViewPlaces = (ListView) v.findViewById(R.id.listViewPlaces);
-        //listViewPlaces.setAdapter(new PlacesAdapter(getActivity(), R.layout.places_list_item, places));
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
-                getActivity(),
-                android.R.layout.simple_list_item_1,
-                EngToDisplayPlaces );
-        listViewPlaces.setAdapter(arrayAdapter);
-        listViewPlaces.setChoiceMode(listViewPlaces.CHOICE_MODE_MULTIPLE);
-        listViewPlaces.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //CheckedTextView checkedTextView = (CheckedTextView) view.findViewById(R.id.placesItem);
-                //checkedTextView.toggle();
-                //Toast.makeText(getActivity().getApplicationContext(), checkedTextView.getText().toString(), Toast.LENGTH_SHORT).show();
-                //set place String
-            }
-        });
-        listViewPlaces.setChoiceMode(listViewPlaces.CHOICE_MODE_MULTIPLE);
-        Button buttonGo = (Button) v.findViewById(R.id.buttonFragmentDestination);
-        buttonGo.setOnClickListener(new View.OnClickListener() {
+        String id = this.getArguments().getString("message");
+        getLocation();
+        View v = inflater.inflate(R.layout.fragment_propose_meeting, container, false);
+        Button buttonYes = (Button) v.findViewById(R.id.buttonYes);
+        Button buttonNo = (Button) v.findViewById(R.id.buttonNo);
+        TextView textViewId = (TextView) v.findViewById(R.id.textViewId);
+        if(id!=null) {
+            String name=null;
+            name = MainActivity.friendsDictionary.get(Long.parseLong(id));
+            textViewId.setText(MainActivity.friendsDictionary.get(Long.parseLong(id)) + "?");
+        }
+        buttonYes.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DialogFragment newFragment = new TimePickerFragment();
-                newFragment.setTargetFragment(ChoosePlacesFragment.this, DATEPICKER_FRAGMENT);
-                newFragment.show(getActivity().getSupportFragmentManager(), "TimePicker");
+                while (mLastLocation == null)
+                {}
+                if(mLastLocation!=null) {
+                    String localization = mLastLocation.getLatitude() + " " + mLastLocation.getLongitude();
+                    //String type, String id, String location, String state, String time, String placeId, String placeType, ArrayList<String> friends, ArrayList<String> favPlaces)
+                    String content = setContent("1", MainActivity.getNickname(), localization, "accepting", null, null, null, null, null);
+                    agentInterface.sendMessage(content, ACLMessage.ACCEPT_PROPOSAL);
+                }
+            }
+        });
+
+        buttonNo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                    String content = setContent("1", MainActivity.getNickname(), null, "decline", null, null, null, null, null);
+                    agentInterface.sendMessage(content, ACLMessage.REJECT_PROPOSAL);
             }
         });
         return v;
     }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        switch(requestCode) {
-            case DATEPICKER_FRAGMENT:
-                if (resultCode == Activity.RESULT_OK) {
-                    // here the part where I get my selected date from the saved variable in the intent and the displaying it.
-
-                    Bundle bundle = data.getExtras();
-                    String resultDate = bundle.getString("selectedDate", "error");
-                    Toast.makeText(getActivity(),resultDate
-                            ,Toast.LENGTH_LONG).show();
-                    getLocation();
-                    friendsID=((MainActivity)getActivity()).getFriendsID();
-                    //LastLocation
-                    String localization = mLastLocation.getLatitude() + " " + mLastLocation.getLongitude();
-                    //String type, String id, String location, String state, String time, String placeId, String placeType, ArrayList<String> friends, ArrayList<String> favPlaces)
-                    String content = setContent("0", MainActivity.getNickname(), localization, "accepting", resultDate, null, place, friendsID, null);
-                    try {
-                        agentInterface = MicroRuntime.getAgent(MainActivity.getNickname())
-                                .getO2AInterface(AgentInterface.class);
-                    } catch (ControllerException e) {
-                        e.printStackTrace();
-                    }
-                    agentInterface.sendMessage(content, ACLMessage.INFORM);
-                    Fragment fragment = new WaitForFriendsFragment();
-                    FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                    fragmentTransaction.replace(R.id.content_frame, fragment);
-                    fragmentTransaction.addToBackStack(null);
-                    fragmentTransaction.commit();
-                    /*String loc = agentInterface.getDestination();
-                    Bundle bundle1 = new Bundle();
-                    String myMessage = loc;
-                    bundle1.putString("message", myMessage );
-                    Fragment fragment = new DestinationFoundFragment();
-                    fragment.setArguments(bundle1);
-                    FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                    FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                    fragmentTransaction.replace(R.id.content_frame, fragment);
-                    fragmentTransaction.addToBackStack(null);
-                    fragmentTransaction.commit();*/
-                }
-                break;
-            }
-        }
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -217,8 +162,6 @@ public class ChoosePlacesFragment extends Fragment implements
         super.onDetach();
         mListener = null;
     }
-
-
     @Override
     public void onConnected(Bundle connectionHint) {
         // Provides a simple way of getting a device's location and is well suited for
@@ -272,6 +215,7 @@ public class ChoosePlacesFragment extends Fragment implements
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -291,10 +235,14 @@ public class ChoosePlacesFragment extends Fragment implements
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (mLastLocation != null) {
         } else {
-            Toast.makeText(getActivity(), "No location detected", Toast.LENGTH_LONG).show();
+            mGoogleApiClient.connect();
+            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            if (mLastLocation != null) {
+            }
+            else
+            {Toast.makeText(getActivity(), "No location detected", Toast.LENGTH_LONG).show();}
         }
     }
-
     private String setContent(String type, String id, String location, String state, String time, String placeId, String placeType, ArrayList<String> friends, ArrayList<String> favPlaces){
         String content = null;
         XMLParse p = new XMLParse();
@@ -319,6 +267,5 @@ public class ChoosePlacesFragment extends Fragment implements
         content = p.Parse();
         return content;
     }
-
 
 }

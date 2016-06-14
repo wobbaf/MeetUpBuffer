@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -34,7 +35,9 @@ import com.example.magda.meetupbuffer.fragments.ChooseFriendsFragment;
 import com.example.magda.meetupbuffer.fragments.ChoosePlacesFragment;
 import com.example.magda.meetupbuffer.fragments.DestinationFoundFragment;
 import com.example.magda.meetupbuffer.fragments.ProposeDestinationFragment;
+import com.example.magda.meetupbuffer.fragments.ProposeMeetingFragment;
 import com.example.magda.meetupbuffer.fragments.StartFragment;
+import com.example.magda.meetupbuffer.fragments.WaitForFriendsFragment;
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
@@ -47,6 +50,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.HashMap;
 
 import jade.android.MicroRuntimeService;
 import jade.core.Profile;
@@ -58,13 +63,15 @@ public class MainActivity extends AppCompatActivity
         ChoosePlacesFragment.OnFragmentInteractionListener,
         DestinationFoundFragment.OnFragmentInteractionListener,
         StartFragment.OnFragmentInteractionListener,
-        ProposeDestinationFragment.OnFragmentInteractionListener{
+        ProposeDestinationFragment.OnFragmentInteractionListener,
+        ProposeMeetingFragment.OnFragmentInteractionListener,
+        WaitForFriendsFragment.OnFragmentInteractionListener{
     public static String getNickname() {
         return nickname;
     }
-
+    public static Location LastLocation;
     static String nickname = "";
-    String host = "192.168.111.95";
+    String host = "192.168.111.162";
     String port = "1099";
     ServiceConnection serviceConnection = null;
     public static MicroRuntimeServiceBinder microRuntimeService = null;
@@ -73,6 +80,7 @@ public class MainActivity extends AppCompatActivity
     JSONArray list = null;
     ListView firendsList;
     public static AgentInterface agentInterface;
+    public static HashMap<Long, String> friendsDictionary;
 
     public static ArrayList<String> getFriendsID() {
         return friendsID;
@@ -131,6 +139,22 @@ public class MainActivity extends AppCompatActivity
                     }
                 }
         ).executeAsync();
+        friendsDictionary = new HashMap<Long,String>();
+        for (int i = 0; i < friendsListData.size(); i++) {
+            Long key = null;
+            String value = null;
+            try {
+                key = Long.parseLong(friendsListData.get(i).getString("id"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            try {
+                value = friendsListData.get(i).getString("name");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            friendsDictionary.put(key,value);
+        }
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -154,6 +178,7 @@ public class MainActivity extends AppCompatActivity
         //navigationView.setNavigationItemSelectedListener(this);
 
     }
+
 
     @Override
     public void onBackPressed() {
@@ -201,7 +226,7 @@ public class MainActivity extends AppCompatActivity
             finish();
         }
         if (id == R.id.start_main_container) {
-            bindService();
+            //bindService();
         }
 
         return super.onOptionsItemSelected(item);
@@ -227,18 +252,32 @@ public class MainActivity extends AppCompatActivity
             fragmentTransaction.addToBackStack(null);
             fragmentTransaction.commit();
             String msg = extras.getString("origin");
-            Bundle bundle = new Bundle();
-            bundle.putString("message", msg);
-            fragment = new ProposeDestinationFragment();
-            fragment.setArguments(bundle);
-            fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.replace(R.id.content_frame, fragment);
-            fragmentTransaction.addToBackStack(null);
-            fragmentTransaction.commit();
+            String msg1 = extras.getString("proposemeeting");
+            if(msg!=null) {
+                Bundle bundle = new Bundle();
+                bundle.putString("message", msg);
+                fragment = new ProposeDestinationFragment();
+                fragment.setArguments(bundle);
+                fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.replace(R.id.content_frame, fragment);
+                fragmentTransaction.addToBackStack(null);
+                fragmentTransaction.commit();
+            }
+            else if (msg1!=null)
+            {
+                Bundle bundle = new Bundle();
+                bundle.putString("message", msg1);
+                fragment = new ProposeMeetingFragment();
+                fragment.setArguments(bundle);
+                fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.replace(R.id.content_frame, fragment);
+                fragmentTransaction.addToBackStack(null);
+                fragmentTransaction.commit();
+            }
         }
     }
 
-    private void bindService() {
+    public void bindService() {
         serviceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
@@ -253,18 +292,18 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onSuccess(Void aVoid) {
                         // Split container startup successfull
-                        Toast.makeText(MainActivity.this, "Container created", Toast.LENGTH_LONG).show();
+                        //Toast.makeText(MainActivity.this, "Container created", Toast.LENGTH_LONG).show();
                         microRuntimeService.startAgent(nickname, AndroidAgent.class.getName(), new Object[]{getApplicationContext()}, new RuntimeCallback<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
                                 //Agent succesfully started
-                                Toast.makeText(MainActivity.this, "Agent created", Toast.LENGTH_LONG).show();
+                                //Toast.makeText(MainActivity.this, "Agent created", Toast.LENGTH_LONG).show();
                             }
 
                             @Override
                             public void onFailure(Throwable throwable) {
                                 //Agent startup error
-                                Toast.makeText(MainActivity.this, "Agent creation error", Toast.LENGTH_LONG).show();
+                                //Toast.makeText(MainActivity.this, "Agent creation error", Toast.LENGTH_LONG).show();
                             }
                         });
                     }
@@ -272,7 +311,7 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onFailure(Throwable throwable) {
                         // Split container startup error
-                        Toast.makeText(MainActivity.this, "Container failure", Toast.LENGTH_LONG).show();
+                        //Toast.makeText(MainActivity.this, "Container failure", Toast.LENGTH_LONG).show();
                     }
                 });
                 ;

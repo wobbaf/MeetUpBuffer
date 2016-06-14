@@ -12,7 +12,6 @@ import javax.xml.transform.stream.StreamResult;
 
 import java.io.*;
 import java.util.ArrayList;
-
 public class XMLParse {
     private static XMLParse instance;
     public static String id;
@@ -21,9 +20,15 @@ public class XMLParse {
     public static String time;
     public static String type;
     public static String res;
+    public static String placeId;
     public static ArrayList<String> friends = new ArrayList<String>();
-    public static XMLParse instance(){
-        return instance;
+    public static ArrayList<String> favPlaces = new ArrayList<String>();
+    public static String placeType;
+    public XMLParse instance(){
+        if(instance != null)
+            return instance;
+        instance = this;
+        return this;
     }
     public XMLParse(){
         instance = this;
@@ -61,6 +66,16 @@ public class XMLParse {
                 subElement3.appendChild(doc.createTextNode(time));
                 rootElement.appendChild(subElement3);
             }
+            if (placeType != null){
+                Element subElement3 = doc.createElement("placeType");
+                subElement3.appendChild(doc.createTextNode(placeType));
+                rootElement.appendChild(subElement3);
+            }
+            if (placeId != null){
+                Element subElement3 = doc.createElement("placeId");
+                subElement3.appendChild(doc.createTextNode(placeId));
+                rootElement.appendChild(subElement3);
+            }
             if (friends != null){
                 Element subElement3 = doc.createElement("friends");
                 for(int i = 0; i < friends.size(); i++){
@@ -71,13 +86,20 @@ public class XMLParse {
                 }
                 rootElement.appendChild(subElement3);
             }
-            //DOMImplementationLS domImplementation = (DOMImplementationLS) doc.getImplementation();
-            //LSSerializer lsSerializer = domImplementation.createLSSerializer();
+            if (favPlaces != null){
+                Element subElement3 = doc.createElement("favPlaces");
+                for(int i = 0; i < favPlaces.size(); i++){
+                    Element friend = doc.createElement("favPlaces");
+                    friend.appendChild(doc.createTextNode(favPlaces.get(i)));
+                    friend.setAttribute("placeId", favPlaces.get(i));
+                    subElement3.appendChild(friend);
+                }
+                rootElement.appendChild(subElement3);
+            }
             Transformer transformer = TransformerFactory.newInstance().newTransformer();
             StringWriter stringWriter = new StringWriter();
             transformer.transform(new DOMSource(doc), new StreamResult(stringWriter));
             res = stringWriter.toString();
-            //res = lsSerializer.writeToString(doc);
         } catch (Exception e) {
             e.printStackTrace();
         }
