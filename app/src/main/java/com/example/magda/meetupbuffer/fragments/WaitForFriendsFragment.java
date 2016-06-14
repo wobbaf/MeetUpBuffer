@@ -6,10 +6,13 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,12 +57,10 @@ public class WaitForFriendsFragment extends Fragment implements
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-    ListView listViewFriends;
     protected GoogleApiClient mGoogleApiClient;
-    static ArrayList<String> friends = new ArrayList<String>();
-    static ArrayAdapter<String> adapter;
     static FragmentManager fm;
     private AgentInterface agentInterface;
+    public static Handler UIHandler = new Handler(Looper.getMainLooper());
     /**
      * Represents a geographical location.
      */
@@ -110,14 +111,22 @@ public class WaitForFriendsFragment extends Fragment implements
                 .build();
     }
 
-    public static void addFriend(String id, String location) {
-        String friend = MainActivity.friendsDictionary.get(Long.parseLong(id));
-        friends.add(friend);
-        adapter.notifyDataSetChanged();
-        String[] latlong = location.split("\\s+");
-        double latitude = Float.parseFloat(latlong[0]);
-        double longitude = Float.parseFloat(latlong[1]);
-        map.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title(friend));
+    public static void addFriend(String id, final String location) {
+        final String friend = "Maciek";//MainActivity.friendsDictionary.get(Long.parseLong(id));
+        UIHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                //Toast.makeText(this, "New friend accepted invitation", Toast.LENGTH_SHORT);
+                Log.d("New friend", "New friend added");
+                String[] latlong = location.split("\\s+");
+                double latitude = Float.parseFloat(latlong[0]);
+                double longitude = Float.parseFloat(latlong[1]);
+                map.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title(friend));
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 15));
+            }
+        });
+        //
+
     }
 
     @Override
@@ -126,11 +135,6 @@ public class WaitForFriendsFragment extends Fragment implements
         View v = inflater.inflate(R.layout.fragment_wait_for_friends, container, false);
         getLocation();
         fm = getActivity().getSupportFragmentManager();
-        adapter = new ArrayAdapter<String>(getActivity(),
-                android.R.layout.simple_list_item_1,
-                friends);
-        listViewFriends = (ListView) v.findViewById(R.id.listView_wait_for_friends);
-        listViewFriends.setAdapter(adapter);
 
         map = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_wait_for_friends)).getMap();
         if(MainActivity.LastLocation!=null) {

@@ -62,7 +62,7 @@ public class AndroidAgent extends Agent  implements AgentInterface{
             @Override
             public void action() {
                 {
-                    MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+                    MessageTemplate mt = MessageTemplate.MatchAll();
                     ACLMessage rec = receive(mt);
                     if (rec != null) {
                         //System.out.println(this.getAgent().getName() + " recieved from " + rec.getSender().getName());
@@ -116,11 +116,12 @@ public class AndroidAgent extends Agent  implements AgentInterface{
                                         .build();
                                 notificationManager1.notify(1, notification1);
                                 break;
-                            case "2": //Proposal of place
+                            case "2": //Friends agreed
                                 location = read.location;
                                 String id = read.id;
                                 WaitForFriendsFragment.addFriend(id, location);
                                 break;
+
                         }
                     } else
                         block();
@@ -183,9 +184,12 @@ public class AndroidAgent extends Agent  implements AgentInterface{
                         XMLRead read = new XMLRead();
                         read.Read(rec.getContent());
                         try{
-                            location = read.location;
-                            Log.d("Destination", read.location);
-                            WaitForFriendsFragment.locationFound(location);
+                            if (read.type.equals("3")) {
+                                String placeId = read.placeId;
+                                Log.d("Destination", read.location);
+                                WaitForFriendsFragment.locationFound(placeId);
+                            }
+
                         }
                         catch(Exception e)
                         {}

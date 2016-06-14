@@ -74,8 +74,8 @@ public class StartFragment extends Fragment {
         buttonGo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity activity = (MainActivity) getActivity();
-                activity.bindService();
+                //MainActivity activity = (MainActivity) getActivity();
+                //activity.bindService();
                 Fragment fragment = new ChooseFriendsFragment();
                 FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();

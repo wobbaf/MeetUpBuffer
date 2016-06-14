@@ -18,6 +18,10 @@ import com.example.magda.meetupbuffer.R;
 import com.example.magda.meetupbuffer.helpers.GPSTracker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceBuffer;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -98,18 +102,26 @@ public class DestinationFoundFragment extends Fragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        String location = this.getArguments().getString("message");
+        String placeId = this.getArguments().getString("message");
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_destination_found, container, false);
-        String[] latlong =  location.split("\\s+");
-        double latitude = Float.parseFloat(latlong[0]);
-        double longitude = Float.parseFloat(latlong[1]);
         map = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMap();
-        Marker gpsLocation = map.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)));
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 15));
-        // Move the camera instantly to hamburg with a zoom of 15.
 
-        // Zoom in, animating the camera.
+        Places.GeoDataApi.getPlaceById(mGoogleApiClient, placeId)
+                .setResultCallback(new ResultCallback<PlaceBuffer>() {
+                    @Override
+                    public void onResult(PlaceBuffer places) {
+                        if (places.getStatus().isSuccess() && places.getCount() > 0) {
+                            final Place myPlace = places.get(0);
+                            map.addMarker(new MarkerOptions().position(myPlace.getLatLng())).setTitle(myPlace.getName().toString());
+                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 15));
+                        } else {
+
+                        }
+                        places.release();
+                    }
+                });
+
         map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
         return v;
     }

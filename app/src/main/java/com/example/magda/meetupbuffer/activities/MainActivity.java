@@ -174,6 +174,7 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
+        bindService();
         //final ListView navigationView = (ListView) findViewById(R.id.left_drawer);
         //navigationView.setNavigationItemSelectedListener(this);
 
