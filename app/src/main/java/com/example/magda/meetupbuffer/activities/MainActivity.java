@@ -1,5 +1,6 @@
 package com.example.magda.meetupbuffer.activities;
 
+import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -17,6 +18,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,6 +33,7 @@ import com.example.magda.meetupbuffer.R;
 import com.example.magda.meetupbuffer.agent.AgentInterface;
 import com.example.magda.meetupbuffer.agent.AndroidAgent;
 import com.example.magda.meetupbuffer.async.DownloadImageTask;
+import com.example.magda.meetupbuffer.fragments.ChooseFavoritePlaces;
 import com.example.magda.meetupbuffer.fragments.ChooseFriendsFragment;
 import com.example.magda.meetupbuffer.fragments.ChoosePlacesFragment;
 import com.example.magda.meetupbuffer.fragments.DestinationFoundFragment;
@@ -43,14 +46,13 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
 import com.facebook.login.LoginManager;
+import com.google.android.gms.maps.GoogleMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Dictionary;
 import java.util.HashMap;
 
 import jade.android.MicroRuntimeService;
@@ -58,14 +60,17 @@ import jade.core.Profile;
 import jade.util.leap.Properties;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener ,
+        implements
+        NavigationView.OnNavigationItemSelectedListener ,
         ChooseFriendsFragment.OnFragmentInteractionListener,
         ChoosePlacesFragment.OnFragmentInteractionListener,
         DestinationFoundFragment.OnFragmentInteractionListener,
         StartFragment.OnFragmentInteractionListener,
         ProposeDestinationFragment.OnFragmentInteractionListener,
         ProposeMeetingFragment.OnFragmentInteractionListener,
-        WaitForFriendsFragment.OnFragmentInteractionListener{
+        WaitForFriendsFragment.OnFragmentInteractionListener,
+        ChooseFavoritePlaces.OnFragmentInteractionListener
+{
     public static String getNickname() {
         return nickname;
     }
@@ -77,6 +82,7 @@ public class MainActivity extends AppCompatActivity
     public static MicroRuntimeServiceBinder microRuntimeService = null;
     boolean bind = false;
     public static ArrayList<JSONObject> friendsListData = new ArrayList();
+    public static ArrayList<String> chosenPlaces = new ArrayList();
     JSONArray list = null;
     ListView firendsList;
     public static AgentInterface agentInterface;
@@ -333,7 +339,13 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_friends) {
+        if(id == R.id.nav_favourite_places) {
+            GoogleMap map;
+
+
+
+        }
+        else  if (id == R.id.nav_friends) {
             // Handle the camera action
         } else if (id == R.id.nav_preferences) {
 
