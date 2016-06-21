@@ -8,6 +8,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +21,11 @@ import com.example.magda.meetupbuffer.R;
 import com.example.magda.meetupbuffer.activities.MainActivity;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -45,9 +52,9 @@ public class ChooseFavoritePlaces extends Fragment implements
     private GoogleMap map;
     double latitude=0;
     double longitude=0;
+    private static View v;
     // TODO: Rename and change types of parameters
 
-    ArrayAdapter adapter = new ArrayAdapter(getActivity(),android.R.layout.simple_list_item_1,MainActivity.chosenPlaces);
     private String mParam1;
     private String mParam2;
     protected GoogleApiClient mGoogleApiClient;
@@ -82,6 +89,7 @@ public class ChooseFavoritePlaces extends Fragment implements
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        setRetainInstance(true);
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
@@ -101,27 +109,29 @@ public class ChooseFavoritePlaces extends Fragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        String location = this.getArguments().getString("message");
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_choose_favorite_places, container, false);
-        String[] latlong =  location.split("\\s+");
-        double latitude = Float.parseFloat(latlong[0]);
-        double longitude = Float.parseFloat(latlong[1]);
-        map = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMap();
-        Marker gpsLocation = map.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)));
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 15));
-        ListView lw =(ListView)v.findViewById(R.id.listViewPlaces);
-        lw.setAdapter(adapter);
-        map.setOnMapClickListener(new GoogleMap.OnMapClickListener(){
+        if (container == null) {
+            return null;
+        }
+        v = inflater.inflate(R.layout.fragment_choose_favorite_places, container, false);
+        PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
+                getActivity().getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                map.addMarker(new MarkerOptions()
+                        .title(place.getName().toString())
+                        .snippet(place.getAddress().toString())
+                        .position(place.getLatLng()));
+            }
 
             @Override
-            public void onMapClick(LatLng latLng) {
-                MainActivity.chosenPlaces.add(latLng.latitude + " " + latLng.longitude);
-                adapter.notifyDataSetChanged();
+            public void onError(Status status) {
+                // TODO: Handle the error.
             }
         });
 
-        map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
+
         return v;
     }
 
@@ -129,6 +139,38 @@ public class ChooseFavoritePlaces extends Fragment implements
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
+        }
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        // TODO Auto-generated method stub
+        if (map != null)
+            setUpMap();
+
+        if (map == null) {
+            // Try to obtain the map from the SupportMapFragment.
+            map = ((SupportMapFragment) getChildFragmentManager()
+                    .findFragmentById(R.id.mapFavorites)).getMap();
+            // Check if we were successful in obtaining the map.
+            if (map != null)
+                setUpMap();
+        }
+    }
+    private void setUpMap() {
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(52.22968, 21.01223), 12.0f));
+
+    }
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        try {
+            SupportMapFragment fragment = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.mapFavorites));
+            if (fragment != null) getFragmentManager().beginTransaction().remove(fragment).commit();
+
+        } catch (IllegalStateException e) {
+            //handle this situation because you are necessary will get
+            //an exception here :-(
         }
     }
 

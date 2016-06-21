@@ -165,8 +165,9 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         NavigationView view = (NavigationView) findViewById(R.id.nav_view);
+        view.setNavigationItemSelectedListener(this);
         View headerLayout =
-                view.inflateHeaderView(R.layout.nav_header_main);
+                view.getHeaderView(0);
         ImageView image = (ImageView) (headerLayout.findViewById(R.id.imageView));
         TextView name = (TextView) (headerLayout.findViewById(R.id.nameTextView));
 
@@ -340,10 +341,12 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if(id == R.id.nav_favourite_places) {
-            GoogleMap map;
-
-
-
+            Fragment fragment = new ChooseFavoritePlaces();
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.content_frame, fragment);
+            fragmentTransaction.addToBackStack(null);
+            fragmentTransaction.commit();
         }
         else  if (id == R.id.nav_friends) {
             // Handle the camera action
