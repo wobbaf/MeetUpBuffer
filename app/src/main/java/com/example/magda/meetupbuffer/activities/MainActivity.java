@@ -1,6 +1,5 @@
 package com.example.magda.meetupbuffer.activities;
 
-import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -18,7 +17,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,7 +31,7 @@ import com.example.magda.meetupbuffer.R;
 import com.example.magda.meetupbuffer.agent.AgentInterface;
 import com.example.magda.meetupbuffer.agent.AndroidAgent;
 import com.example.magda.meetupbuffer.async.DownloadImageTask;
-import com.example.magda.meetupbuffer.fragments.ChooseFavoritePlaces;
+import com.example.magda.meetupbuffer.fragments.ChooseFavoritePlacesNavBar;
 import com.example.magda.meetupbuffer.fragments.ChooseFriendsFragment;
 import com.example.magda.meetupbuffer.fragments.ChoosePlacesFragment;
 import com.example.magda.meetupbuffer.fragments.DestinationFoundFragment;
@@ -41,12 +39,12 @@ import com.example.magda.meetupbuffer.fragments.ProposeDestinationFragment;
 import com.example.magda.meetupbuffer.fragments.ProposeMeetingFragment;
 import com.example.magda.meetupbuffer.fragments.StartFragment;
 import com.example.magda.meetupbuffer.fragments.WaitForFriendsFragment;
+import com.example.magda.meetupbuffer.helpers.SharedPreferencesUtil;
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
 import com.facebook.login.LoginManager;
-import com.google.android.gms.maps.GoogleMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -69,20 +67,21 @@ public class MainActivity extends AppCompatActivity
         ProposeDestinationFragment.OnFragmentInteractionListener,
         ProposeMeetingFragment.OnFragmentInteractionListener,
         WaitForFriendsFragment.OnFragmentInteractionListener,
-        ChooseFavoritePlaces.OnFragmentInteractionListener
+        ChooseFavoritePlacesNavBar.OnFragmentInteractionListener
 {
     public static String getNickname() {
         return nickname;
     }
     public static Location LastLocation;
     static String nickname = "";
-    String host = "192.168.111.162";
+    String host = "192.168.56.1";
     String port = "1099";
     ServiceConnection serviceConnection = null;
     public static MicroRuntimeServiceBinder microRuntimeService = null;
+    public static ArrayList favorite_places_id;
     boolean bind = false;
     public static ArrayList<JSONObject> friendsListData = new ArrayList();
-    public static ArrayList<String> chosenPlaces = new ArrayList();
+
     JSONArray list = null;
     ListView firendsList;
     public static AgentInterface agentInterface;
@@ -98,6 +97,12 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+       //TODO: fill if exists
+        favorite_places_id = new ArrayList();
+
+        SharedPreferencesUtil.loadArray(favorite_places_id,getApplicationContext(),"fav_places_id");
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
         if(extras==null) {
@@ -341,7 +346,7 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if(id == R.id.nav_favourite_places) {
-            Fragment fragment = new ChooseFavoritePlaces();
+            Fragment fragment = new ChooseFavoritePlacesNavBar();
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.content_frame, fragment);

@@ -126,7 +126,7 @@ public class ChoosePlacesFragment extends Fragment implements
                 android.R.layout.simple_list_item_1,
                 EngToDisplayPlaces );
         listViewPlaces.setAdapter(arrayAdapter);
-        listViewPlaces.setChoiceMode(listViewPlaces.CHOICE_MODE_MULTIPLE);
+        listViewPlaces.setChoiceMode(listViewPlaces.CHOICE_MODE_SINGLE);
         listViewPlaces.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -168,7 +168,7 @@ public class ChoosePlacesFragment extends Fragment implements
                     //LastLocation
                     String localization = mLastLocation.getLatitude() + " " + mLastLocation.getLongitude();
                     //String type, String id, String location, String state, String time, String placeId, String placeType, ArrayList<String> friends, ArrayList<String> favPlaces)
-                    String content = setContent("0", MainActivity.getNickname(), localization, "accepting", resultDate, null, PlToServerPlaces.get(chosenTypePlaceIdx), friendsID, null);
+                    String content = setContent("0", MainActivity.getNickname(), localization, "accepting", resultDate, null, PlToServerPlaces.get(chosenTypePlaceIdx), friendsID, MainActivity.favorite_places_id);
                     try {
                         agentInterface = MicroRuntime.getAgent(MainActivity.getNickname())
                                 .getO2AInterface(AgentInterface.class);
