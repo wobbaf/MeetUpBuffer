@@ -8,9 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
-import android.view.InflateException;
+import android.support.v4.widget.DrawerLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +17,7 @@ import android.widget.ListView;
 
 import com.example.magda.meetupbuffer.R;
 import com.example.magda.meetupbuffer.activities.MainActivity;
+import com.example.magda.meetupbuffer.helpers.SharedPreferencesUtil;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
@@ -30,7 +29,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
@@ -43,16 +41,19 @@ import java.util.ArrayList;
  * Use the {@link ProposeDestinationFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ChooseFavoritePlaces extends Fragment implements
+public class ChooseFavoritePlacesNavBar extends Fragment implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     private GoogleMap map;
+    ArrayList<String> chosenPlaces;
     double latitude=0;
     double longitude=0;
+    ArrayAdapter<String> itemsAdapter;
     private static View v;
+    ListView listViewFavPlaces ;
     // TODO: Rename and change types of parameters
 
     private String mParam1;
@@ -65,7 +66,7 @@ public class ChooseFavoritePlaces extends Fragment implements
     protected Location mLastLocation;
     private OnFragmentInteractionListener mListener;
 
-    public ChooseFavoritePlaces() {
+    public ChooseFavoritePlacesNavBar() {
         // Required empty public constructor
     }
 
@@ -78,8 +79,8 @@ public class ChooseFavoritePlaces extends Fragment implements
      * @return A new instance of fragment DestinationFoundFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static DestinationFoundFragment newInstance(String param1, String param2) {
-        DestinationFoundFragment fragment = new DestinationFoundFragment();
+    public static ChooseFavoritePlacesNavBar newInstance(String param1, String param2) {
+        ChooseFavoritePlacesNavBar fragment = new ChooseFavoritePlacesNavBar();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -91,6 +92,11 @@ public class ChooseFavoritePlaces extends Fragment implements
     public void onCreate(Bundle savedInstanceState) {
         setRetainInstance(true);
         super.onCreate(savedInstanceState);
+
+
+        DrawerLayout drawer = (DrawerLayout)getActivity().findViewById(R.id.drawer_layout);
+        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
@@ -113,7 +119,21 @@ public class ChooseFavoritePlaces extends Fragment implements
         if (container == null) {
             return null;
         }
+
         v = inflater.inflate(R.layout.fragment_choose_favorite_places, container, false);
+
+        chosenPlaces = new ArrayList<>();
+        SharedPreferencesUtil.loadArray(chosenPlaces,getContext(),"fav_places_names");
+
+
+
+        listViewFavPlaces = (ListView) v.findViewById(R.id.nav_favourite_places);
+
+        itemsAdapter =
+                new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, chosenPlaces);
+        itemsAdapter.notifyDataSetChanged();
+
+        listViewFavPlaces.setAdapter(itemsAdapter);
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
                 getActivity().getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
@@ -123,6 +143,12 @@ public class ChooseFavoritePlaces extends Fragment implements
                         .title(place.getName().toString())
                         .snippet(place.getAddress().toString())
                         .position(place.getLatLng()));
+
+                if(!chosenPlaces.contains(place.getName())) {
+                    chosenPlaces.add(place.getName().toString());
+                    MainActivity.favorite_places_id.add(place.getId());
+
+                }
             }
 
             @Override
@@ -141,6 +167,9 @@ public class ChooseFavoritePlaces extends Fragment implements
             mListener.onFragmentInteraction(uri);
         }
     }
+
+
+
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
@@ -161,12 +190,32 @@ public class ChooseFavoritePlaces extends Fragment implements
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(52.22968, 21.01223), 12.0f));
 
     }
+
+
+
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+
+        SharedPreferencesUtil.saveArray(MainActivity.favorite_places_id,getContext(),"fav_places_id");
+        SharedPreferencesUtil.saveArray(chosenPlaces,getContext(),"fav_places_names");
+
+        DrawerLayout drawer = (DrawerLayout)getActivity().findViewById(R.id.drawer_layout);
+        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNDEFINED);
+
+
         try {
+
+            PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
+                    getActivity().getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+            if (autocompleteFragment != null)
+             getActivity().getFragmentManager().beginTransaction().remove(autocompleteFragment).commit();
+
+
             SupportMapFragment fragment = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.mapFavorites));
-            if (fragment != null) getFragmentManager().beginTransaction().remove(fragment).commit();
+            if (fragment != null)
+             getFragmentManager().beginTransaction().remove(fragment).commit();
 
         } catch (IllegalStateException e) {
             //handle this situation because you are necessary will get
