@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
@@ -64,6 +65,7 @@ public class ProposeDestinationFragment extends Fragment implements
     private String mParam2;
     static Marker marker;
     protected static GoogleApiClient mGoogleApiClient;
+    static FragmentActivity activity;
 
     /**
      * Represents a geographical location.
@@ -128,6 +130,7 @@ public class ProposeDestinationFragment extends Fragment implements
         String placeId = this.getArguments().getString("message");
         fm = getActivity().getSupportFragmentManager();
         // Inflate the layout for this fragment
+        activity = getActivity();
         View v = inflater.inflate(R.layout.fragment_propose_destination, container, false);
         map = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMap();
         Places.GeoDataApi.getPlaceById(mGoogleApiClient, placeId)
@@ -177,24 +180,30 @@ public class ProposeDestinationFragment extends Fragment implements
         }
     }
 
-    public static void nextlocationFound(String placeId){
-        map.clear();
-        Places.GeoDataApi.getPlaceById(mGoogleApiClient, placeId)
-                .setResultCallback(new ResultCallback<PlaceBuffer>() {
-                    @Override
-                    public void onResult(PlaceBuffer places) {
-                        if (places.getStatus().isSuccess()) {
-                            final Place myPlace = places.get(0);
-                            LatLng queried_location = myPlace.getLatLng();
-                            marker = map.addMarker(new MarkerOptions()
-                                    .title(myPlace.getName().toString())
-                                    .snippet(myPlace.getAddress().toString())
-                                    .position(myPlace.getLatLng()));
-                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(queried_location, 15));
-                        }
-                        places.release();
-                    }
-                });
+    public static void nextlocationFound(final String placeId){
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                map.clear();
+                Places.GeoDataApi.getPlaceById(mGoogleApiClient, placeId)
+                        .setResultCallback(new ResultCallback<PlaceBuffer>() {
+                            @Override
+                            public void onResult(PlaceBuffer places) {
+                                if (places.getStatus().isSuccess()) {
+                                    final Place myPlace = places.get(0);
+                                    LatLng queried_location = myPlace.getLatLng();
+                                    marker = map.addMarker(new MarkerOptions()
+                                            .title(myPlace.getName().toString())
+                                            .snippet(myPlace.getAddress().toString())
+                                            .position(myPlace.getLatLng()));
+                                    map.moveCamera(CameraUpdateFactory.newLatLngZoom(queried_location, 15));
+                                }
+                                places.release();
+                            }
+                        });
+            }
+        });
+
     }
 
     public static void locationFound(String location){

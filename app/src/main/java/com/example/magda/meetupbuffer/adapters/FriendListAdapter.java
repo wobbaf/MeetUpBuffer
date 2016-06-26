@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.magda.meetupbuffer.R;
+import com.example.magda.meetupbuffer.activities.MainActivity;
 import com.example.magda.meetupbuffer.async.DownloadImageTask;
 
 import org.json.JSONException;
@@ -61,7 +62,9 @@ public class FriendListAdapter extends ArrayAdapter {
             conn1.setInstanceFollowRedirects(true);
             Bitmap fb_img = BitmapFactory.decodeStream(conn1.getInputStream());*/
             holder.txtTitle.setText(friend.getString("name"));
-            //holder.imgIcon.setImageResource(R.drawable.com_facebook_profile_picture_blank_square);
+            if(MainActivity.friendsDictionaryImg.get(Long.parseLong(friend.getString("id")))!=null) {
+                holder.imgIcon.setImageBitmap(MainActivity.friendsDictionaryImg.get(Long.parseLong(friend.getString("id"))));
+            }
             //new DownloadImageTask(holder.imgIcon).execute("https://graph.facebook.com/" + friend.getString("id") + "/picture?type=small");
         } catch (JSONException e) {
             e.printStackTrace();

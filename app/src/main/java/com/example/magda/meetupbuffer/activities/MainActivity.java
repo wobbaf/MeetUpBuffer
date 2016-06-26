@@ -174,8 +174,7 @@ public class MainActivity extends AppCompatActivity
                                 } catch (JSONException e) {
                                     e.printStackTrace();
                                 }
-                                new DownloadImageTask(value).execute("https://graph.facebook.com/" + key + "/picture?type=small");
-                                friendsDictionaryImg.put(key,value);
+                                new DownloadImageTask(value, key).execute("https://graph.facebook.com/" + key + "/picture?type=large");
                             }
 
                         } catch (JSONException e) {

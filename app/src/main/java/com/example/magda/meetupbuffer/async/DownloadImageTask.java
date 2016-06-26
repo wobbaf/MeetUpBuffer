@@ -6,6 +6,8 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ImageView;
 
+import com.example.magda.meetupbuffer.activities.MainActivity;
+
 import java.io.InputStream;
 
 /**
@@ -15,9 +17,11 @@ public class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
 
 
     private Bitmap bmImage;
+    private Long key;
 
-    public DownloadImageTask(Bitmap bmImage) {
+    public DownloadImageTask(Bitmap bmImage, Long key) {
         this.bmImage = bmImage;
+        this.key = key;
     }
 
     protected void onPreExecute() {
@@ -40,6 +44,8 @@ public class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
     protected void onPostExecute(Bitmap result) {
         //set image of your imageview
         bmImage = result;
+        MainActivity.friendsDictionaryImg.put(key,bmImage);
+
         //close
     }
 }
