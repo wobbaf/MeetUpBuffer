@@ -5,8 +5,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.NavigationView;
@@ -76,7 +78,7 @@ public class MainActivity extends AppCompatActivity
     }
     public static Location LastLocation;
     static String nickname = "";
-    String host = "192.168.111.162";
+    String host = "192.168.0.13";
     String port = "1099";
     ServiceConnection serviceConnection = null;
     public static MicroRuntimeServiceBinder microRuntimeService = null;
@@ -87,7 +89,7 @@ public class MainActivity extends AppCompatActivity
     ListView firendsList;
     public static AgentInterface agentInterface;
     public static HashMap<Long, String> friendsDictionary;
-
+    public static HashMap<Long, Bitmap> friendsDictionaryImg;
     public static ArrayList<String> getFriendsID() {
         return friendsID;
     }
@@ -98,6 +100,8 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        wifi.setWifiEnabled(true); // true or false to activate/deactivate wifi
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
         if(extras==null) {
@@ -134,33 +138,47 @@ public class MainActivity extends AppCompatActivity
                     public void onCompleted(GraphResponse response) {
                         try {
                             if(response!=null) {
+                                friendsListData.clear();
                                 list = response.getJSONObject().getJSONArray("data");
                                 for (int i = 0; i < list.length(); i++) {
                                     friendsListData.add(list.getJSONObject(i));
                                 }
                             }
+                            friendsDictionary = new HashMap<Long,String>();
+                            for (int i = 0; i < friendsListData.size(); i++) {
+                                Long key = null;
+                                String value = null;
+                                try {
+                                    key = Long.parseLong(friendsListData.get(i).getString("id"));
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                try {
+                                    value = friendsListData.get(i).getString("name");
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                friendsDictionary.put(key,value);
+                            }
+                            friendsDictionaryImg = new HashMap<Long, Bitmap>();
+                            for (int i = 0; i < friendsListData.size(); i++) {
+                                Long key = null;
+                                Bitmap value = null;
+                                try {
+                                    key = Long.parseLong(friendsListData.get(i).getString("id"));
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                new DownloadImageTask(value).execute("https://graph.facebook.com/" + key + "/picture?type=small");
+                                friendsDictionaryImg.put(key,value);
+                            }
+
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
                     }
                 }
         ).executeAsync();
-        friendsDictionary = new HashMap<Long,String>();
-        for (int i = 0; i < friendsListData.size(); i++) {
-            Long key = null;
-            String value = null;
-            try {
-                key = Long.parseLong(friendsListData.get(i).getString("id"));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            try {
-                value = friendsListData.get(i).getString("name");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            friendsDictionary.put(key,value);
-        }
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -173,7 +191,7 @@ public class MainActivity extends AppCompatActivity
 
         com.facebook.Profile profile = com.facebook.Profile.getCurrentProfile();
         if(profile!=null) {
-            new DownloadImageTask(image).execute("https://graph.facebook.com/" + profile.getId() + "/picture?type=large");
+            //new DownloadImageTask(image).execute("https://graph.facebook.com/" + profile.getId() + "/picture?type=large");
             name.setText(profile.getFirstName());
             nickname = profile.getId().toString();
         }
@@ -194,7 +212,6 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            friendsListData.clear();
             super.onBackPressed();
         }
     }

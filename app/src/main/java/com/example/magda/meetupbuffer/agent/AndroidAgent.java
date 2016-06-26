@@ -12,6 +12,7 @@ import android.util.Log;
 
 import com.example.magda.meetupbuffer.R;
 import com.example.magda.meetupbuffer.activities.MainActivity;
+import com.example.magda.meetupbuffer.fragments.ProposeDestinationFragment;
 import com.example.magda.meetupbuffer.fragments.WaitForFriendsFragment;
 import com.example.magda.meetupbuffer.parsers.XMLRead;
 
@@ -87,6 +88,7 @@ public class AndroidAgent extends Agent  implements AgentInterface{
                                 PendingIntent pIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                                 String name = MainActivity.friendsDictionary.get(Long.parseLong(initiator));
                                 Notification notification = new Notification.Builder(context)
+                                        .setContentTitle("Meet Up Buffer :)")
                                         .setContentText("You have been ivited by " + name)
                                         .setSmallIcon(R.drawable.com_facebook_profile_picture_blank_square)
                                         .setContentIntent(pIntent).setAutoCancel(true)
@@ -121,7 +123,18 @@ public class AndroidAgent extends Agent  implements AgentInterface{
                                 String id = read.id;
                                 WaitForFriendsFragment.addFriend(id, location);
                                 break;
-
+                            case "3": //Propose destination
+                                String placeId = read.placeId;
+                                WaitForFriendsFragment.locationFound(placeId);
+                                break;
+                            case "4": //Propose destination
+                                String __placeId = read.placeId;
+                                ProposeDestinationFragment.nextlocationFound(__placeId);
+                                break;
+                            case "5":
+                                String _placeId = read.placeId;
+                                ProposeDestinationFragment.locationFound(_placeId);
+                                break;
                         }
                     } else
                         block();
@@ -174,29 +187,6 @@ public class AndroidAgent extends Agent  implements AgentInterface{
             msg.addReceiver(receiver);
             send(msg);
             Log.d("Message", "Send message");
-
-            Behaviour b = new CyclicBehaviour(this.myAgent){
-                public void action(){
-                    MessageTemplate mt = MessageTemplate.MatchAll();
-                    ACLMessage rec = receive(mt);
-                    if(rec != null){
-                        //System.out.println(this.getAgent().getName() + " recieved from " + rec.getSender().getName());
-                        XMLRead read = new XMLRead();
-                        read.Read(rec.getContent());
-                        try{
-                            if (read.type.equals("3")) {
-                                String placeId = read.placeId;
-                                Log.d("Destination", read.location);
-                                WaitForFriendsFragment.locationFound(placeId);
-                            }
-
-                        }
-                        catch(Exception e)
-                        {}
-                    }
-                }
-            };
-            addBehaviour(b);
         }
     }
 

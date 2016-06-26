@@ -8,20 +8,37 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import com.example.magda.meetupbuffer.R;
+import com.example.magda.meetupbuffer.activities.MainActivity;
+import com.example.magda.meetupbuffer.agent.AgentInterface;
+import com.example.magda.meetupbuffer.parsers.XMLParse;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceBuffer;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.ArrayList;
+
+import jade.core.MicroRuntime;
+import jade.lang.acl.ACLMessage;
+import jade.wrapper.ControllerException;
+import jade.wrapper.StaleProxyException;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -37,13 +54,16 @@ public class ProposeDestinationFragment extends Fragment implements
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-    private GoogleMap map;
+    private static GoogleMap map;
     double latitude=0;
     double longitude=0;
+    static FragmentManager fm;
+    private AgentInterface agentInterface;
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
-    protected GoogleApiClient mGoogleApiClient;
+    static Marker marker;
+    protected static GoogleApiClient mGoogleApiClient;
 
     /**
      * Represents a geographical location.
@@ -80,33 +100,73 @@ public class ProposeDestinationFragment extends Fragment implements
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        try {
+            agentInterface = MicroRuntime.getAgent(MainActivity.getNickname())
+                    .getO2AInterface(AgentInterface.class);
+        } catch (StaleProxyException e) {
+            //showAlertDialog(getString(R.string.msg_interface_exc), true);
+        } catch (ControllerException e) {
+            //showAlertDialog(getString(R.string.msg_controller_exc), true);
+        }
         buildGoogleApiClient();
     }
 
     protected synchronized void buildGoogleApiClient() {
+
         mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
+                .addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API)
                 .build();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        String location = this.getArguments().getString("message");
+        String placeId = this.getArguments().getString("message");
+        fm = getActivity().getSupportFragmentManager();
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_destination_found, container, false);
-        String[] latlong =  location.split("\\s+");
-        double latitude = Float.parseFloat(latlong[0]);
-        double longitude = Float.parseFloat(latlong[1]);
+        View v = inflater.inflate(R.layout.fragment_propose_destination, container, false);
         map = ((SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map)).getMap();
-        Marker gpsLocation = map.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)));
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 15));
+        Places.GeoDataApi.getPlaceById(mGoogleApiClient, placeId)
+                .setResultCallback(new ResultCallback<PlaceBuffer>() {
+                    @Override
+                    public void onResult(PlaceBuffer places) {
+                        if (places.getStatus().isSuccess()) {
+                            final Place myPlace = places.get(0);
+                            LatLng queried_location = myPlace.getLatLng();
+                            marker = map.addMarker(new MarkerOptions()
+                                    .title(myPlace.getName().toString())
+                                    .snippet(myPlace.getAddress().toString())
+                                    .position(myPlace.getLatLng()));
+                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(queried_location, 15));
+                        }
+                        places.release();
+                    }
+                });
+        Button buttonYes = (Button) v.findViewById(R.id.buttonLove);
+        Button buttonNo = (Button) v.findViewById(R.id.buttonHate);
+        buttonYes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String localization = mLastLocation.getLatitude() + " " + mLastLocation.getLongitude();
+                //String type, String id, String location, String state, String time, String placeId, String placeType, ArrayList<String> friends, ArrayList<String> favPlaces)
+                String content = setContent("4", MainActivity.getNickname(), localization, "accepting", null, null, null, null, null);
+                agentInterface.sendMessage(content, ACLMessage.ACCEPT_PROPOSAL);
+            }
+        });
+        buttonNo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String content = setContent("4", MainActivity.getNickname(), null, "decline", null, null, null, null, null);
+                agentInterface.sendMessage(content, ACLMessage.REJECT_PROPOSAL);
+            }
+        });
         // Move the camera instantly to hamburg with a zoom of 15.
 
         // Zoom in, animating the camera.
-        map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
         return v;
     }
 
@@ -117,6 +177,36 @@ public class ProposeDestinationFragment extends Fragment implements
         }
     }
 
+    public static void nextlocationFound(String placeId){
+        marker.remove();
+        Places.GeoDataApi.getPlaceById(mGoogleApiClient, placeId)
+                .setResultCallback(new ResultCallback<PlaceBuffer>() {
+                    @Override
+                    public void onResult(PlaceBuffer places) {
+                        if (places.getStatus().isSuccess()) {
+                            final Place myPlace = places.get(0);
+                            LatLng queried_location = myPlace.getLatLng();
+                            marker = map.addMarker(new MarkerOptions()
+                                    .title(myPlace.getName().toString())
+                                    .snippet(myPlace.getAddress().toString())
+                                    .position(myPlace.getLatLng()));
+                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(queried_location, 15));
+                        }
+                        places.release();
+                    }
+                });
+    }
+
+    public static void locationFound(String location){
+        Bundle bundle1 = new Bundle();
+        bundle1.putString("message", location);
+        Fragment fragment = new DestinationFoundFragment();
+        fragment.setArguments(bundle1);
+        FragmentTransaction fragmentTransaction = fm.beginTransaction();
+        fragmentTransaction.replace(R.id.content_frame, fragment);
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+    }
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -187,6 +277,31 @@ public class ProposeDestinationFragment extends Fragment implements
         // attempt to re-establish the connection.
         //Log.i(TAG, "Connection suspended");
         mGoogleApiClient.connect();
+    }
+
+    private String setContent(String type, String id, String location, String state, String time, String placeId, String placeType, ArrayList<String> friends, ArrayList<String> favPlaces){
+        String content = null;
+        XMLParse p = new XMLParse();
+        if (type != null)
+            p.instance().type = type;
+        if (id != null)
+            p.instance().id = id;
+        if (location != null)
+            p.instance().location = location;
+        if (state != null)
+            p.instance().state = state;
+        if (time != null)
+            p.instance().time = time;
+        if (placeType != null)
+            p.instance().placeType = placeType;
+        if (placeId != null)
+            p.instance().placeId = placeId;
+        if (friends != null)
+            p.instance().friends = new ArrayList<>(friends);
+        if (favPlaces != null)
+            p.instance().favPlaces = new ArrayList<>(favPlaces);
+        content = p.Parse();
+        return content;
     }
     /**
      * This interface must be implemented by activities that contain this

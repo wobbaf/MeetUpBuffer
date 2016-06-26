@@ -158,7 +158,7 @@ public class WaitForFriendsFragment extends Fragment implements
     public static void locationFound(String location){
         Bundle bundle1 = new Bundle();
         bundle1.putString("message", location);
-        Fragment fragment = new DestinationFoundFragment();
+        Fragment fragment = new ProposeDestinationFragment();
         fragment.setArguments(bundle1);
         FragmentTransaction fragmentTransaction = fm.beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, fragment);

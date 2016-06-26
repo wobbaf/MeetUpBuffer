@@ -36,19 +36,25 @@
         android:layout_height="wrap_content"
         android:text="Love it!"
         android:id="@+id/buttonLove"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
         android:textColor="@android:color/holo_blue_light"
-        android:background="#ffffff" />
+        android:background="#ffffff"
+        android:layout_alignParentBottom="true"
+        android:layout_alignRight="@+id/textView3"
+        android:layout_alignEnd="@+id/textView3"
+        android:layout_marginRight="61dp"
+        android:layout_marginEnd="61dp" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hate it"
         android:id="@+id/buttonHate"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
         android:textColor="@android:color/holo_blue_light"
-        android:background="#ffffff" />
+        android:background="#ffffff"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@+id/buttonLove"
+        android:layout_toStartOf="@+id/buttonLove"
+        android:layout_marginRight="25dp"
+        android:layout_marginEnd="25dp" />
 
 </RelativeLayout>
