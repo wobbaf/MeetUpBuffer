@@ -10,6 +10,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -20,9 +21,12 @@ import com.example.magda.meetupbuffer.activities.MainActivity;
 import com.example.magda.meetupbuffer.helpers.SharedPreferencesUtil;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceBuffer;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -32,6 +36,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -55,7 +60,9 @@ public class ChooseFavoritePlacesNavBar extends Fragment implements
     private static View v;
     ListView listViewFavPlaces ;
     // TODO: Rename and change types of parameters
-
+    float historicX = Float.NaN, historicY = Float.NaN;
+    static final int DELTA = 50;
+    enum Direction {LEFT, RIGHT;}
     private String mParam1;
     private String mParam2;
     protected GoogleApiClient mGoogleApiClient;
@@ -109,6 +116,8 @@ public class ChooseFavoritePlacesNavBar extends Fragment implements
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
+                .addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API)
                 .build();
     }
 
@@ -125,13 +134,46 @@ public class ChooseFavoritePlacesNavBar extends Fragment implements
         chosenPlaces = new ArrayList<>();
         SharedPreferencesUtil.loadArray(chosenPlaces,getContext(),"fav_places_names");
 
-
-
         listViewFavPlaces = (ListView) v.findViewById(R.id.nav_favourite_places);
+        listViewFavPlaces.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                // TODO Auto-generated method stub
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        historicX = event.getX();
+                        historicY = event.getY();
+                        break;
 
+                    case MotionEvent.ACTION_UP:
+                        if (event.getX() - historicX < -DELTA) {
+                            return true;
+                        } else if (event.getX() - historicX > DELTA) {
+                            int heightOfEachItem = listViewFavPlaces.getChildAt(0).getHeight();
+                            int heightOfFirstItem = -listViewFavPlaces.getChildAt(0).getTop() + listViewFavPlaces.getFirstVisiblePosition()*heightOfEachItem;
+                            final int firstPosition = (int) Math.ceil(heightOfFirstItem / heightOfEachItem); // This is the same as child #0
+                            final int wantedPosition = (int) Math.floor((historicY - listViewFavPlaces.getChildAt(0).getTop()) / heightOfEachItem) + firstPosition;
+                            chosenPlaces.remove(wantedPosition);
+                            itemsAdapter.notifyDataSetChanged();
+                            MainActivity.favorite_places_id.remove(wantedPosition);
+                            SharedPreferencesUtil.saveArray(MainActivity.favorite_places_id, getContext(), "fav_places_id");
+                            SharedPreferencesUtil.saveArray(chosenPlaces, getContext(), "fav_places_names");
+                            map.clear();
+                            loadMarkers();
+                            return true;
+                        }
+                        break;
+                    default:
+                        return false;
+                }
+                return false;
+            }
+        });
         itemsAdapter =
                 new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, chosenPlaces);
         itemsAdapter.notifyDataSetChanged();
+
+        loadMarkers();
 
         listViewFavPlaces.setAdapter(itemsAdapter);
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
@@ -139,14 +181,16 @@ public class ChooseFavoritePlacesNavBar extends Fragment implements
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
-                map.addMarker(new MarkerOptions()
-                        .title(place.getName().toString())
-                        .snippet(place.getAddress().toString())
-                        .position(place.getLatLng()));
-
                 if(!chosenPlaces.contains(place.getName())) {
                     chosenPlaces.add(place.getName().toString());
                     MainActivity.favorite_places_id.add(place.getId());
+                    itemsAdapter.notifyDataSetChanged();
+                    map.addMarker(new MarkerOptions()
+                            .title(place.getName().toString())
+                            .snippet(place.getAddress().toString())
+                            .position(place.getLatLng()));
+                    SharedPreferencesUtil.saveArray(MainActivity.favorite_places_id, getContext(), "fav_places_id");
+                    SharedPreferencesUtil.saveArray(chosenPlaces, getContext(), "fav_places_names");
 
                 }
             }
@@ -159,6 +203,30 @@ public class ChooseFavoritePlacesNavBar extends Fragment implements
 
 
         return v;
+    }
+
+    private void loadMarkers() {
+        if(MainActivity.favorite_places_id.size()!=0)
+        {
+            for (String placeId: MainActivity.favorite_places_id)
+            {
+                Places.GeoDataApi.getPlaceById(mGoogleApiClient, placeId)
+                        .setResultCallback(new ResultCallback<PlaceBuffer>() {
+                            @Override
+                            public void onResult(PlaceBuffer places) {
+                                if (places.getStatus().isSuccess()) {
+                                    final Place myPlace = places.get(0);
+                                    LatLng queried_location = myPlace.getLatLng();
+                                    map.addMarker(new MarkerOptions()
+                                            .title(myPlace.getName().toString())
+                                            .snippet(myPlace.getAddress().toString())
+                                            .position(myPlace.getLatLng()));
+                                }
+                                places.release();
+                            }
+                        });
+            }
+        }
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -197,9 +265,6 @@ public class ChooseFavoritePlacesNavBar extends Fragment implements
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-
-        SharedPreferencesUtil.saveArray(MainActivity.favorite_places_id,getContext(),"fav_places_id");
-        SharedPreferencesUtil.saveArray(chosenPlaces,getContext(),"fav_places_names");
 
         DrawerLayout drawer = (DrawerLayout)getActivity().findViewById(R.id.drawer_layout);
         drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNDEFINED);

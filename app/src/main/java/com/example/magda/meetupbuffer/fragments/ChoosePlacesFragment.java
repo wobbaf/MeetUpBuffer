@@ -166,6 +166,10 @@ public class ChoosePlacesFragment extends Fragment implements
 
                     friendsID=((MainActivity)getActivity()).getFriendsID();
                     //LastLocation
+                    if(mLastLocation==null)
+                    {
+                        buildGoogleApiClient();
+                    }
                     String localization = mLastLocation.getLatitude() + " " + mLastLocation.getLongitude();
                     //String type, String id, String location, String state, String time, String placeId, String placeType, ArrayList<String> friends, ArrayList<String> favPlaces)
                     String content = setContent("0", MainActivity.getNickname(), localization, "accepting", resultDate, null, PlToServerPlaces.get(chosenTypePlaceIdx), friendsID, MainActivity.favorite_places_id);

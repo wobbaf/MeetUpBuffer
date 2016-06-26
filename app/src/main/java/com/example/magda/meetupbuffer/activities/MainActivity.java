@@ -76,11 +76,11 @@ public class MainActivity extends AppCompatActivity
     }
     public static Location LastLocation;
     static String nickname = "";
-    String host = "192.168.0.13";
+    String host = "192.168.111.254";
     String port = "1099";
     ServiceConnection serviceConnection = null;
     public static MicroRuntimeServiceBinder microRuntimeService = null;
-    public static ArrayList favorite_places_id;
+    public static ArrayList<String> favorite_places_id;
     boolean bind = false;
     public static ArrayList<JSONObject> friendsListData = new ArrayList();
     public static ArrayList<String> chosenPlaces = new ArrayList();
