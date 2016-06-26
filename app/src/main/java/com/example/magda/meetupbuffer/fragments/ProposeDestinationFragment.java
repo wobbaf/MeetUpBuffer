@@ -178,7 +178,7 @@ public class ProposeDestinationFragment extends Fragment implements
     }
 
     public static void nextlocationFound(String placeId){
-        marker.remove();
+        map.clear();
         Places.GeoDataApi.getPlaceById(mGoogleApiClient, placeId)
                 .setResultCallback(new ResultCallback<PlaceBuffer>() {
                     @Override

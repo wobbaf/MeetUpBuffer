@@ -117,7 +117,7 @@ public class DestinationFoundFragment extends Fragment implements
                         if (places.getStatus().isSuccess() && places.getCount() > 0) {
                             final Place myPlace = places.get(0);
                             map.addMarker(new MarkerOptions().position(myPlace.getLatLng())).setTitle(myPlace.getName().toString());
-                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 15));
+                            map.moveCamera(CameraUpdateFactory.newLatLngZoom(myPlace.getLatLng(), 15));
                         } else {
 
                         }
@@ -133,7 +133,6 @@ public class DestinationFoundFragment extends Fragment implements
                 getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, fragment).addToBackStack(null).commit();
             }
         });
-        map.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
         return v;
     }
 

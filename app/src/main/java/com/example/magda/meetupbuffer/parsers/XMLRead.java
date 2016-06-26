@@ -142,6 +142,14 @@ public class XMLRead {
                         location = getString("location",rootElement);
                         placeId = getString("placeId",rootElement);
                         break;
+                    case "4":
+                        location = getString("location",rootElement);
+                        placeId = getString("placeId",rootElement);
+                        break;
+                    case "5":
+                        location = getString("location",rootElement);
+                        placeId = getString("placeId",rootElement);
+                        break;
                 }
             } catch (Exception e) {
                 e.printStackTrace();

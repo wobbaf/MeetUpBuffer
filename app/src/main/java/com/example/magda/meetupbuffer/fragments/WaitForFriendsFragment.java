@@ -112,7 +112,7 @@ public class WaitForFriendsFragment extends Fragment implements
     }
 
     public static void addFriend(String id, final String location) {
-        final String friend = "Maciek";//MainActivity.friendsDictionary.get(Long.parseLong(id));
+        final String friend = MainActivity.friendsDictionary.get(Long.parseLong(id));
         UIHandler.post(new Runnable() {
             @Override
             public void run() {

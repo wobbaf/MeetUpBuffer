@@ -40,6 +40,7 @@ public class AndroidAgent extends Agent  implements AgentInterface{
     String agentID = "Server";
     AID receiver = new AID(agentID,AID.ISLOCALNAME);
     AMSAgentDescription [] agents = null;
+    int counter=0;
     String activeAgentsNames [] = new String[]{"Sorry no one is available!"};
     private Context context;
     String location = null;
@@ -133,7 +134,11 @@ public class AndroidAgent extends Agent  implements AgentInterface{
                                 break;
                             case "5":
                                 String _placeId = read.placeId;
-                                ProposeDestinationFragment.locationFound(_placeId);
+                                if(counter==0)
+                                {
+                                    ProposeDestinationFragment.locationFound(_placeId);
+                                    counter++;
+                                }
                                 break;
                         }
                     } else
