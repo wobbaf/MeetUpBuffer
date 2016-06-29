@@ -4,6 +4,8 @@ import android.os.Bundle;
 
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.example.magda.meetupbuffer.R;
@@ -35,6 +37,9 @@ public class LoginActivity extends AppCompatActivity {
             }
         };
         callbackManager = CallbackManager.Factory.create();
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.login);
         info = (TextView) findViewById(R.id.info);
         loginButton = (LoginButton) findViewById(R.id.login_button);

@@ -137,7 +137,7 @@ public class ChoosePlacesFragment extends Fragment implements
                 //set place String
             }
         });
-        listViewPlaces.setChoiceMode(listViewPlaces.CHOICE_MODE_MULTIPLE);
+        //listViewPlaces.setChoiceMode(listViewPlaces.CHOICE_MODE_MULTIPLE);
         Button buttonGo = (Button) v.findViewById(R.id.buttonFragmentDestination);
         buttonGo.setOnClickListener(new View.OnClickListener() {
             @Override

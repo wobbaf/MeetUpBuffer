@@ -16,6 +16,7 @@ import android.widget.CheckedTextView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.etsy.android.grid.StaggeredGridView;
 import com.example.magda.meetupbuffer.R;
 import com.example.magda.meetupbuffer.activities.MainActivity;
 import com.example.magda.meetupbuffer.adapters.FriendListAdapter;
@@ -44,7 +45,7 @@ public class ChooseFriendsFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     FriendListAdapter adapter;
-    ListView firendsList;
+    StaggeredGridView firendsList;
     ArrayList<String> friendsID = new ArrayList<String>();
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -88,7 +89,7 @@ public class ChooseFriendsFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v =  inflater.inflate(R.layout.fragment_choose_friends, container, false);
-        firendsList = (ListView) v.findViewById(R.id.friends_list);
+        firendsList = (StaggeredGridView) v.findViewById(R.id.friends_list);
         adapter = new FriendListAdapter(getActivity().getApplicationContext(),
                 R.layout.freinds_list_item, MainActivity.friendsListData);
         firendsList.setAdapter(adapter);
@@ -96,8 +97,8 @@ public class ChooseFriendsFragment extends Fragment {
         firendsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                CheckedTextView checkedTextView = (CheckedTextView) view.findViewById(R.id.firstLine);
-                checkedTextView.toggle();
+                //CheckedTextView checkedTextView = (CheckedTextView) view.findViewById(R.id.firstLine);
+                //checkedTextView.toggle();
             }
         });
                 firendsList.setChoiceMode(firendsList.CHOICE_MODE_MULTIPLE);

@@ -1,31 +1,40 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="?android:attr/listPreferredItemHeight"
-    android:padding="6dip" >
+    android:layout_height="150dp"
+    android:padding="6dip"
+    android:orientation="vertical"
+    android:listSelector="@android:color/holo_blue_dark"
+    >
 
     <ImageView
         android:id="@+id/icon"
         android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentTop="true"
-        android:layout_marginRight="6dip"
-        android:contentDescription="TODO" />
+        android:contentDescription="TODO"
+        android:listSelector="@android:color/holo_blue_dark"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="5dp"
+        android:src="@drawable/com_facebook_profile_picture_blank_portrait" />
 
-    <CheckedTextView
+    <TextView
         android:id="@+id/firstLine"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignWithParentIfMissing="true"
-        android:gravity="center_vertical"
+        android:listSelector="@android:color/holo_blue_dark"
+        android:gravity="center_vertical|center_horizontal"
         android:textSize="16sp"
-        android:layout_centerVertical="true"
-        android:layout_toRightOf="@+id/icon"
-        android:layout_toEndOf="@+id/icon"
         android:textColor="#ffffff"
-        android:drawableRight="?android:attr/listChoiceIndicatorMultiple"
         android:clickable="true"
         android:checked="false"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="5dp"
+        android:text="Blank Profile" />
 
-</RelativeLayout> 
+</GridLayout>
